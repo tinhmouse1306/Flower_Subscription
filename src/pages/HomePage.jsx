@@ -39,10 +39,16 @@ const HomePage = () => {
                     </div>
 
                     <div className="text-center mt-12">
-                        <button className="btn-secondary text-lg px-8 py-4 flex items-center mx-auto">
-                            Xem tất cả gói hoa
-                            <ArrowRight size={20} className="ml-2" />
-                        </button>
+                        <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                            <button className="btn-secondary text-lg px-8 py-4 flex items-center">
+                                Xem tất cả gói hoa
+                                <ArrowRight size={20} className="ml-2" />
+                            </button>
+                            <button className="btn-primary text-lg px-8 py-4 flex items-center">
+                                Chọn hoa theo sở thích
+                                <ArrowRight size={20} className="ml-2" />
+                            </button>
+                        </div>
                     </div>
                 </div>
             </section>
@@ -148,7 +154,7 @@ const HomePage = () => {
                             Đăng ký ngay
                         </button>
                         <button className="border-2 border-white text-white hover:bg-white hover:text-primary-600 font-medium py-4 px-8 rounded-lg transition-colors duration-200 text-lg">
-                            Liên hệ tư vấn
+                            Chọn hoa theo sở thích
                         </button>
                     </div>
                 </div>

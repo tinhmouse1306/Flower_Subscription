@@ -30,6 +30,12 @@ const Header = () => {
                         <Link to="/packages" className="text-gray-700 hover:text-primary-600 font-medium transition-colors">
                             Gói hoa
                         </Link>
+                        <Link to="/flower-selection" className="text-gray-700 hover:text-primary-600 font-medium transition-colors">
+                            Chọn hoa
+                        </Link>
+                        <Link to="/subscription" className="text-gray-700 hover:text-primary-600 font-medium transition-colors">
+                            Đăng ký
+                        </Link>
                         <Link to="/about" className="text-gray-700 hover:text-primary-600 font-medium transition-colors">
                             Về chúng tôi
                         </Link>
@@ -43,12 +49,12 @@ const Header = () => {
                         <button className="p-2 text-gray-600 hover:text-primary-600 transition-colors">
                             <Heart size={20} />
                         </button>
-                        <button className="p-2 text-gray-600 hover:text-primary-600 transition-colors relative">
+                        <Link to="/cart" className="p-2 text-gray-600 hover:text-primary-600 transition-colors relative">
                             <ShoppingCart size={20} />
                             <span className="absolute -top-1 -right-1 bg-primary-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
                                 2
                             </span>
-                        </button>
+                        </Link>
 
                         {isLoggedIn ? (
                             <div className="flex items-center space-x-2">
@@ -61,12 +67,12 @@ const Header = () => {
                             </div>
                         ) : (
                             <div className="flex items-center space-x-2">
-                                <button className="text-gray-700 hover:text-primary-600 font-medium transition-colors">
+                                <Link to="/login" className="text-gray-700 hover:text-primary-600 font-medium transition-colors">
                                     Đăng nhập
-                                </button>
-                                <button className="btn-primary">
+                                </Link>
+                                <Link to="/register" className="btn-primary">
                                     Đăng ký
-                                </button>
+                                </Link>
                             </div>
                         )}
                     </div>
@@ -99,6 +105,20 @@ const Header = () => {
                                 Gói hoa
                             </Link>
                             <Link
+                                to="/flower-selection"
+                                className="text-gray-700 hover:text-primary-600 font-medium transition-colors"
+                                onClick={() => setIsMenuOpen(false)}
+                            >
+                                Chọn hoa
+                            </Link>
+                            <Link
+                                to="/subscription"
+                                className="text-gray-700 hover:text-primary-600 font-medium transition-colors"
+                                onClick={() => setIsMenuOpen(false)}
+                            >
+                                Đăng ký
+                            </Link>
+                            <Link
                                 to="/about"
                                 className="text-gray-700 hover:text-primary-600 font-medium transition-colors"
                                 onClick={() => setIsMenuOpen(false)}
@@ -125,12 +145,12 @@ const Header = () => {
                                     </div>
                                 ) : (
                                     <div className="flex flex-col space-y-2">
-                                        <button className="text-gray-700 hover:text-primary-600 font-medium transition-colors text-left">
+                                        <Link to="/login" className="text-gray-700 hover:text-primary-600 font-medium transition-colors text-left">
                                             Đăng nhập
-                                        </button>
-                                        <button className="btn-primary w-full">
+                                        </Link>
+                                        <Link to="/register" className="btn-primary w-full">
                                             Đăng ký
-                                        </button>
+                                        </Link>
                                     </div>
                                 )}
                             </div>

@@ -482,3 +482,62 @@ export const notifications = [
         read: false
     }
 ];
+
+// Mock Admin and Staff Accounts
+export const adminAccounts = [
+    {
+        id: 1,
+        email: 'admin@flowersub.com',
+        password: 'admin123',
+        name: 'Admin FlowerSub',
+        role: 'admin',
+        status: 'active'
+    },
+    {
+        id: 2,
+        email: 'admin2@flowersub.com',
+        password: 'admin456',
+        name: 'Admin Manager',
+        role: 'admin',
+        status: 'active'
+    }
+];
+
+export const staffAccounts = [
+    {
+        id: 1,
+        email: 'staff@flowersub.com',
+        password: 'staff123',
+        name: 'Staff FlowerSub',
+        role: 'staff',
+        status: 'active'
+    },
+    {
+        id: 2,
+        email: 'staff2@flowersub.com',
+        password: 'staff456',
+        name: 'Staff Delivery',
+        role: 'staff',
+        status: 'active'
+    }
+];
+
+// Mock User Accounts (for testing)
+export const userAccounts = [
+    {
+        id: 1,
+        email: 'user@test.com',
+        password: 'user123',
+        name: 'Test User',
+        role: 'user',
+        status: 'active'
+    },
+    {
+        id: 2,
+        email: 'customer@test.com',
+        password: 'customer123',
+        name: 'Test Customer',
+        role: 'user',
+        status: 'active'
+    }
+];

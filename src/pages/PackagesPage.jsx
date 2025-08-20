@@ -1,9 +1,11 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import PackageCard from '../components/PackageCard';
 import { flowerPackages, deliveryOptions } from '../data/mockData';
 import { Filter, Search, Star } from 'lucide-react';
 
 const PackagesPage = () => {
+    const navigate = useNavigate();
     const [selectedCategory, setSelectedCategory] = useState('all');
     const [selectedDelivery, setSelectedDelivery] = useState('all');
     const [searchTerm, setSearchTerm] = useState('');
@@ -24,7 +26,8 @@ const PackagesPage = () => {
 
     const handlePackageSelect = (packageData) => {
         console.log('Selected package:', packageData);
-        // TODO: Navigate to package details or checkout
+        // Navigate to subscription page
+        navigate('/subscription');
     };
 
     return (
@@ -69,8 +72,8 @@ const PackagesPage = () => {
                                         key={category.id}
                                         onClick={() => setSelectedCategory(category.id)}
                                         className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${selectedCategory === category.id
-                                                ? 'bg-primary-500 text-white'
-                                                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                                            ? 'bg-primary-500 text-white'
+                                            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                                             }`}
                                     >
                                         {category.name}

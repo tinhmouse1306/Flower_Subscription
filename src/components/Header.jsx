@@ -1,14 +1,39 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Menu, X, User, ShoppingCart, Heart } from 'lucide-react';
+import { Menu, X, User, ShoppingCart, Heart, LogOut, Settings, Shield } from 'lucide-react';
+import { isAuthenticated, getUser, logout } from '../utils/auth';
 
 const Header = () => {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
-    const [isLoggedIn, setIsLoggedIn] = useState(false); // Mock state
+    const [isLoggedIn, setIsLoggedIn] = useState(false);
+    const [user, setUser] = useState(null);
+
+    useEffect(() => {
+        const checkAuth = () => {
+            const authenticated = isAuthenticated();
+            setIsLoggedIn(authenticated);
+            if (authenticated) {
+                setUser(getUser());
+            }
+        };
+
+        checkAuth();
+        // Listen for storage changes (when user logs in/out in another tab)
+        window.addEventListener('storage', checkAuth);
+        return () => window.removeEventListener('storage', checkAuth);
+    }, []);
 
     const toggleMenu = () => {
         setIsMenuOpen(!isMenuOpen);
     };
+
+    const handleLogout = () => {
+        logout();
+    };
+
+    // Check user role from user data
+    const isAdmin = user?.role === 'admin';
+    const isStaff = user?.role === 'staff';
 
     return (
         <header className="bg-white shadow-sm sticky top-0 z-50">
@@ -33,9 +58,7 @@ const Header = () => {
                         <Link to="/flower-selection" className="text-gray-700 hover:text-primary-600 font-medium transition-colors">
                             Chọn hoa
                         </Link>
-                        <Link to="/subscription" className="text-gray-700 hover:text-primary-600 font-medium transition-colors">
-                            Đăng ký
-                        </Link>
+
                         <Link to="/about" className="text-gray-700 hover:text-primary-600 font-medium transition-colors">
                             Về chúng tôi
                         </Link>
@@ -63,7 +86,27 @@ const Header = () => {
                                     alt="User"
                                     className="w-8 h-8 rounded-full"
                                 />
-                                <span className="text-gray-700 font-medium">Anh</span>
+                                <div className="flex items-center space-x-2">
+                                    <span className="font-medium text-gray-700">
+                                        {user?.name || user?.email || 'User'}
+                                    </span>
+                                    {isAdmin && (
+                                        <span className="px-2 py-1 bg-red-100 text-red-800 text-xs rounded-full">
+                                            Admin
+                                        </span>
+                                    )}
+                                    {isStaff && (
+                                        <span className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full">
+                                            Staff
+                                        </span>
+                                    )}
+                                    <button
+                                        onClick={handleLogout}
+                                        className="text-gray-700 hover:text-primary-600 transition-colors"
+                                    >
+                                        <LogOut size={16} />
+                                    </button>
+                                </div>
                             </div>
                         ) : (
                             <div className="flex items-center space-x-2">
@@ -111,13 +154,7 @@ const Header = () => {
                             >
                                 Chọn hoa
                             </Link>
-                            <Link
-                                to="/subscription"
-                                className="text-gray-700 hover:text-primary-600 font-medium transition-colors"
-                                onClick={() => setIsMenuOpen(false)}
-                            >
-                                Đăng ký
-                            </Link>
+
                             <Link
                                 to="/about"
                                 className="text-gray-700 hover:text-primary-600 font-medium transition-colors"
@@ -135,20 +172,43 @@ const Header = () => {
 
                             <div className="pt-4 border-t border-gray-200">
                                 {isLoggedIn ? (
-                                    <div className="flex items-center space-x-2">
-                                        <img
-                                            src="https://images.unsplash.com/photo-1494790108755-2616b612b786?w=32&h=32&fit=crop&crop=face"
-                                            alt="User"
-                                            className="w-8 h-8 rounded-full"
-                                        />
-                                        <span className="text-gray-700 font-medium">Anh</span>
+                                    <div className="flex flex-col space-y-2">
+                                        <div className="flex items-center space-x-2">
+                                            <img
+                                                src="https://images.unsplash.com/photo-1494790108755-2616b612b786?w=32&h=32&fit=crop&crop=face"
+                                                alt="User"
+                                                className="w-8 h-8 rounded-full"
+                                            />
+                                            <span className="text-gray-700 font-medium">
+                                                {user?.name || user?.email || 'User'}
+                                            </span>
+                                        </div>
+
+                                        <button
+                                            onClick={() => {
+                                                handleLogout();
+                                                setIsMenuOpen(false);
+                                            }}
+                                            className="flex items-center space-x-2 text-red-600 hover:text-red-700 font-medium transition-colors"
+                                        >
+                                            <LogOut size={16} />
+                                            <span>Đăng xuất</span>
+                                        </button>
                                     </div>
                                 ) : (
                                     <div className="flex flex-col space-y-2">
-                                        <Link to="/login" className="text-gray-700 hover:text-primary-600 font-medium transition-colors text-left">
+                                        <Link
+                                            to="/login"
+                                            className="text-gray-700 hover:text-primary-600 font-medium transition-colors text-left"
+                                            onClick={() => setIsMenuOpen(false)}
+                                        >
                                             Đăng nhập
                                         </Link>
-                                        <Link to="/register" className="btn-primary w-full">
+                                        <Link
+                                            to="/register"
+                                            className="btn-primary w-full"
+                                            onClick={() => setIsMenuOpen(false)}
+                                        >
                                             Đăng ký
                                         </Link>
                                     </div>

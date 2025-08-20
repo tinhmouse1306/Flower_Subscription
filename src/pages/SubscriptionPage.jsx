@@ -85,43 +85,6 @@ const SubscriptionPage = () => {
                 <div className="grid lg:grid-cols-3 gap-8">
                     {/* Left Column - Selection */}
                     <div className="lg:col-span-2 space-y-8">
-                        {/* Student Verification */}
-                        <div className="card">
-                            <div className="flex items-center mb-6">
-                                <Users className="w-6 h-6 text-primary-600 mr-3" />
-                                <h2 className="text-2xl font-bold text-gray-900">
-                                    Xác minh sinh viên
-                                </h2>
-                            </div>
-                            <div className="space-y-4">
-                                <div className="flex items-center">
-                                    <input
-                                        type="checkbox"
-                                        id="isStudent"
-                                        checked={isStudent}
-                                        onChange={(e) => setIsStudent(e.target.checked)}
-                                        className="w-4 h-4 text-primary-600 border-gray-300 rounded focus:ring-primary-500"
-                                    />
-                                    <label htmlFor="isStudent" className="ml-2 text-lg font-medium text-gray-900">
-                                        Tôi là sinh viên
-                                    </label>
-                                </div>
-                                {isStudent && (
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                                            Mã số sinh viên
-                                        </label>
-                                        <input
-                                            type="text"
-                                            value={studentId}
-                                            onChange={(e) => setStudentId(e.target.value)}
-                                            placeholder="Nhập mã số sinh viên"
-                                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                                        />
-                                    </div>
-                                )}
-                            </div>
-                        </div>
 
                         {/* Plan Selection */}
                         <div className="card">
@@ -272,56 +235,6 @@ const SubscriptionPage = () => {
                                     </div>
                                 </div>
                             )}
-
-                            {/* Discount Code */}
-                            <div className="mb-6">
-                                <h3 className="font-semibold text-gray-900 mb-2">
-                                    Mã giảm giá:
-                                </h3>
-                                <div className="flex gap-2">
-                                    <input
-                                        type="text"
-                                        value={discountCode}
-                                        onChange={(e) => setDiscountCode(e.target.value)}
-                                        placeholder="Nhập mã giảm giá"
-                                        className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                                    />
-                                    <button
-                                        onClick={applyDiscount}
-                                        className="px-4 py-2 bg-primary-500 text-white rounded-lg hover:bg-primary-600 transition-colors"
-                                    >
-                                        Áp dụng
-                                    </button>
-                                </div>
-                                {appliedDiscount && (
-                                    <div className="mt-2 p-3 bg-green-50 border border-green-200 rounded-lg">
-                                        <div className="flex items-center text-green-700">
-                                            <CheckCircle className="w-4 h-4 mr-2" />
-                                            <span className="text-sm font-medium">
-                                                {appliedDiscount.name} - Giảm {appliedDiscount.discount}%
-                                            </span>
-                                        </div>
-                                    </div>
-                                )}
-                            </div>
-
-                            {/* Available Discounts */}
-                            {isStudent && (
-                                <div className="mb-6">
-                                    <h3 className="font-semibold text-gray-900 mb-2 flex items-center">
-                                        <Gift className="w-4 h-4 mr-2 text-primary-600" />
-                                        Mã giảm giá sinh viên:
-                                    </h3>
-                                    <div className="space-y-2">
-                                        {studentDiscounts.map((discount) => (
-                                            <div key={discount.id} className="text-sm text-gray-600">
-                                                <span className="font-medium">{discount.code}:</span> {discount.description}
-                                            </div>
-                                        ))}
-                                    </div>
-                                </div>
-                            )}
-
                             {/* Total */}
                             <div className="border-t pt-6">
                                 <div className="flex justify-between items-center text-lg font-semibold text-gray-900">

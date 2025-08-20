@@ -23,7 +23,7 @@ const HomePage = () => {
                             Chọn gói hoa phù hợp với bạn
                         </h2>
                         <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-                            Chúng tôi cung cấp các gói hoa đa dạng với giá cả phù hợp cho sinh viên.
+                            Chúng tôi cung cấp các gói hoa đa dạng với giá cả phù hợp.
                             Tất cả đều bao gồm giao hàng miễn phí và hoa tươi mỗi tuần.
                         </p>
                     </div>
@@ -61,7 +61,7 @@ const HomePage = () => {
                             Tại sao chọn FlowerSub?
                         </h2>
                         <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-                            Chúng tôi cam kết mang đến trải nghiệm tốt nhất cho sinh viên với
+                            Chúng tôi cam kết mang đến trải nghiệm tốt nhất với
                             dịch vụ chất lượng cao và giá cả hợp lý.
                         </p>
                     </div>
@@ -98,11 +98,11 @@ const HomePage = () => {
                                 <Users size={32} className="text-pink-600" />
                             </div>
                             <h3 className="text-xl font-semibold text-gray-900 mb-4">
-                                Dành cho sinh viên
+                                Chất lượng cao
                             </h3>
                             <p className="text-gray-600">
-                                Giá cả được thiết kế đặc biệt cho sinh viên.
-                                Chất lượng cao với chi phí thấp.
+                                Hoa tươi được chọn lọc kỹ lưỡng.
+                                Đảm bảo chất lượng tốt nhất cho khách hàng.
                             </p>
                         </div>
                     </div>
@@ -117,7 +117,7 @@ const HomePage = () => {
                             Khách hàng nói gì về chúng tôi
                         </h2>
                         <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-                            Hơn 500+ sinh viên đã tin tưởng và sử dụng dịch vụ của chúng tôi.
+                            Hơn 500+ khách hàng đã tin tưởng và sử dụng dịch vụ của chúng tôi.
                             Đây là những gì họ nói về FlowerSub.
                         </p>
                     </div>
@@ -147,7 +147,7 @@ const HomePage = () => {
                         Sẵn sàng bắt đầu hành trình với hoa tươi?
                     </h2>
                     <p className="text-xl text-primary-100 mb-8">
-                        Đăng ký ngay hôm nay và nhận ưu đãi đặc biệt cho sinh viên mới.
+                        Đăng ký ngay hôm nay và nhận ưu đãi đặc biệt cho khách hàng mới.
                     </p>
                     <div className="flex flex-col sm:flex-row gap-4 justify-center">
                         <button className="bg-white text-primary-600 hover:bg-gray-100 font-medium py-4 px-8 rounded-lg transition-colors duration-200 text-lg">

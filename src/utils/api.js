@@ -3,7 +3,7 @@ import { getToken, logout } from './auth';
 
 // Tạo axios instance với base URL
 const api = axios.create({
-    baseURL: 'http://localhost:8081',
+    baseURL: 'https://flower-subscription-for-student-be.onrender.com',
     timeout: 10000,
     headers: {
         'Content-Type': 'application/json',
@@ -46,15 +46,15 @@ api.interceptors.response.use(
 
 // API functions
 export const authAPI = {
-    // Login
-    login: (credentials) => api.post('/auth/login', credentials),
+    // Login with username/password
+    login: (credentials) => api.post(`/auth/login?userName=${credentials.userName}&password=${credentials.password}`),
 
     // Register
     register: (userData, role = 'user') =>
         api.post(`/api/register?userRoleChoice=${role}`, userData),
 
     // Google Login
-    googleLogin: (idToken) => api.post('/auth/googleLogin', { idToken }),
+    googleLogin: (data) => api.post('/auth/googleLogin', data),
 
     // Verify Token
     verifyToken: (token) => api.post('/auth/verifyToken', { token }),
@@ -73,7 +73,7 @@ export const userAPI = {
 
 export const subscriptionAPI = {
     // Get packages
-    getPackages: () => api.get('/api/subscription-packages'),
+    getPackages: () => api.get('/api/packages'),
 
     // Get flowers
     getFlowers: () => api.get('/api/flowers'),
@@ -97,7 +97,6 @@ export const adminAPI = {
     exportReport: (type, dateRange) => api.post('/api/admin/reports/export', { type, dateRange }),
 
     // Package management
-    getPackages: () => api.get('/api/admin/packages'),
     createPackage: (data) => api.post('/api/admin/packages', data),
     updatePackage: (id, data) => api.put(`/api/admin/packages/${id}`, data),
     deletePackage: (id) => api.delete(`/api/admin/packages/${id}`),

@@ -1,14 +1,19 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import PackageCard from '../components/PackageCard';
-import { flowerPackages, deliveryOptions } from '../data/mockData';
-import { Filter, Search, Star } from 'lucide-react';
+import { deliveryOptions } from '../data/mockData';
+import { subscriptionAPI } from '../utils/api';
+import { Filter, Search, Star, Loader2 } from 'lucide-react';
+
 
 const PackagesPage = () => {
     const navigate = useNavigate();
     const [selectedCategory, setSelectedCategory] = useState('all');
     const [selectedDelivery, setSelectedDelivery] = useState('all');
     const [searchTerm, setSearchTerm] = useState('');
+    const [packages, setPackages] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
 
     const categories = [
         { id: 'all', name: 'Tất cả' },
@@ -17,10 +22,37 @@ const PackagesPage = () => {
         { id: 'budget', name: 'Tiết kiệm' }
     ];
 
-    const filteredPackages = flowerPackages.filter(packageData => {
+    // Fetch packages from API
+    useEffect(() => {
+        const fetchPackages = async () => {
+            try {
+                setLoading(true);
+                setError(null);
+                console.log('Fetching packages from API...');
+                const response = await subscriptionAPI.getPackages();
+                console.log('API Response:', response);
+                console.log('Packages data:', response.data);
+
+                if (response.data && response.data.result) {
+                    setPackages(response.data.result);
+                } else {
+                    setPackages(response.data || []);
+                }
+            } catch (error) {
+                console.error('Error fetching packages:', error);
+                setError('Không thể tải danh sách gói. Vui lòng đăng nhập trước.');
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchPackages();
+    }, []);
+
+    const filteredPackages = packages.filter(packageData => {
         const matchesCategory = selectedCategory === 'all' || packageData.category === selectedCategory;
-        const matchesSearch = packageData.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            packageData.description.toLowerCase().includes(searchTerm.toLowerCase());
+        const matchesSearch = packageData.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            packageData.description?.toLowerCase().includes(searchTerm.toLowerCase());
         return matchesCategory && matchesSearch;
     });
 
@@ -43,6 +75,7 @@ const PackagesPage = () => {
                             Chọn gói hoa phù hợp với nhu cầu và ngân sách của bạn.
                             Tất cả gói đều bao gồm giao hàng miễn phí và hoa tươi mỗi tuần.
                         </p>
+
                     </div>
                 </div>
             </div>
@@ -87,7 +120,35 @@ const PackagesPage = () => {
 
             {/* Packages Grid */}
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-                {filteredPackages.length > 0 ? (
+                {loading ? (
+                    <div className="text-center py-12">
+                        <Loader2 className="animate-spin h-12 w-12 text-primary-500 mx-auto mb-4" />
+                        <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                            Đang tải danh sách gói...
+                        </h3>
+                        <p className="text-gray-600">
+                            Vui lòng chờ trong giây lát.
+                        </p>
+                    </div>
+                ) : error ? (
+                    <div className="text-center py-12">
+                        <div className="text-red-400 mb-4">
+                            <Search size={64} className="mx-auto" />
+                        </div>
+                        <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                            Cần đăng nhập
+                        </h3>
+                        <p className="text-gray-600 mb-4">
+                            {error}
+                        </p>
+                        <button
+                            onClick={() => navigate('/login')}
+                            className="btn-primary"
+                        >
+                            Đăng nhập ngay
+                        </button>
+                    </div>
+                ) : filteredPackages.length > 0 ? (
                     <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
                         {filteredPackages.map((packageData) => (
                             <PackageCard
@@ -190,6 +251,8 @@ const PackagesPage = () => {
                     </div>
                 </div>
             </div>
+
+
         </div>
     );
 };

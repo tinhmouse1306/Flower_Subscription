@@ -11,10 +11,13 @@ import PaymentSuccessPage from './pages/PaymentSuccessPage';
 import ProtectedRoute from './components/ProtectedRoute';
 import Header from './components/Header';
 import Footer from './components/Footer';
+import GoogleAuthHandler from './components/GoogleAuthHandler';
+
 
 // Admin pages
 import AdminDashboard from './admin/Dashboard';
 import AdminPackages from './admin/Packages';
+import AddPackage from './admin/AddPackage';
 import AdminOrders from './admin/Orders';
 import AdminFlowers from './admin/Flowers';
 import AdminCustomers from './admin/Customers';
@@ -31,7 +34,7 @@ import './App.css';
 
 function App() {
   return (
-    <BrowserRouter>
+    <BrowserRouter future={{ v7_startTransition: true }}>
       <Routes>
         {/* Admin routes - no Header/Footer */}
         <Route path="/admin" element={
@@ -42,6 +45,11 @@ function App() {
         <Route path="/admin/packages" element={
           <ProtectedRoute>
             <AdminPackages />
+          </ProtectedRoute>
+        } />
+        <Route path="/admin/packages/add" element={
+          <ProtectedRoute>
+            <AddPackage />
           </ProtectedRoute>
         } />
         <Route path="/admin/orders" element={
@@ -142,6 +150,7 @@ function App() {
             <Footer />
           </>
         } />
+        <Route path="/google-auth" element={<GoogleAuthHandler />} />
         <Route path="/cart" element={
           <>
             <Header />
@@ -178,6 +187,7 @@ function App() {
             <Footer />
           </>
         } />
+
       </Routes>
     </BrowserRouter>
   );

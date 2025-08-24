@@ -1,13 +1,43 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Vite + React</title>
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.jsx"></script>
-  </body>
+
+<head>
+  <meta charset="UTF-8" />
+  <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Flower Subscription</title>
+</head>
+
+<body>
+  <div id="root"></div>
+  <script type="module" src="/src/main.jsx"></script>
+
+  <!-- Firebase SDK -->
+  <script>
+    // Firebase configuration
+    const firebaseConfig = {
+      apiKey: "AIzaSyCf6pp9cLr1MBW2PPF7p4cY7pa9aFG-q1o",
+      authDomain: "flower-subscription-7c9aa.firebaseapp.com",
+      projectId: "flower-subscription-7c9aa",
+      storageBucket: "flower-subscription-7c9aa.firebasestorage.app",
+      messagingSenderId: "622147275176",
+      appId: "1:622147275176:web:9bcfa2ba8a3835883af59d",
+      measurementId: "G-KZJWRLGR0R"
+    };
+
+    // Set Firebase defaults to prevent init.json request
+    window.__FIREBASE_DEFAULTS__ = {
+      config: firebaseConfig
+    };
+  </script>
+
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+
+  <script>
+    // Initialize Firebase
+    firebase.initializeApp(firebaseConfig);
+  </script>
+</body>
+
 </html>

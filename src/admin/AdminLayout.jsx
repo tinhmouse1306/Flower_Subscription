@@ -23,11 +23,21 @@ const AdminLayout = ({ children }) => {
     const navigate = useNavigate();
 
     useEffect(() => {
-        const userData = JSON.parse(localStorage.getItem('user') || '{}');
+        // Try to get userData from both possible keys
+        let userData = null;
+        try {
+            userData = JSON.parse(localStorage.getItem('userData') || localStorage.getItem('user') || '{}');
+            console.log('AdminLayout: Loaded userData:', userData);
+        } catch (error) {
+            console.error('AdminLayout: Error parsing userData:', error);
+            userData = {};
+        }
         setUser(userData);
 
-        // Redirect if not admin
-        if (userData.role !== 'admin') {
+        // Redirect if not admin (check both cases)
+        if (userData.role !== 'admin' && userData.role !== 'ADMIN') {
+            console.log('AdminLayout: User role is not admin, redirecting to login');
+            console.log('AdminLayout: Current role:', userData.role);
             navigate('/login');
         }
     }, [navigate]);

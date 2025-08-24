@@ -2,17 +2,54 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Eye, EyeOff, Mail, Lock, User, ArrowRight } from 'lucide-react';
 import { authAPI } from '../utils/api';
-import { setAuthData } from '../utils/auth';
-import { adminAccounts, staffAccounts, userAccounts } from '../data/mockData';
+import { setAuthData, isAuthenticated, getToken } from '../utils/auth';
+
+import { initializeFirebase, getFirebaseAuth, getGoogleProvider } from '../utils/firebase';
 import Swal from 'sweetalert2';
+
 
 const LoginPage = () => {
     const [formData, setFormData] = useState({
-        email: '',
+        userName: '',
         password: ''
     });
     const [showPassword, setShowPassword] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
+
+    // Function để decode JWT token
+    const decodeToken = (token) => {
+        try {
+            const parts = token.split('.');
+            if (parts.length !== 3) {
+                throw new Error('Invalid JWT token format');
+            }
+
+            // Decode payload
+            const payload = parts[1];
+            const paddedPayload = payload + '='.repeat((4 - payload.length % 4) % 4);
+            const decodedPayload = atob(paddedPayload.replace(/-/g, '+').replace(/_/g, '/'));
+
+            // Decode header
+            const header = parts[0];
+            const paddedHeader = header + '='.repeat((4 - header.length % 4) % 4);
+            const decodedHeader = atob(paddedHeader.replace(/-/g, '+').replace(/_/g, '/'));
+
+            return {
+                header: JSON.parse(decodedHeader),
+                payload: JSON.parse(decodedPayload),
+                signature: parts[2]
+            };
+        } catch (error) {
+            console.error('Failed to decode token:', error);
+            return null;
+        }
+    };
+
+    const formatDate = (timestamp) => {
+        if (!timestamp) return 'N/A';
+        const date = new Date(timestamp * 1000);
+        return date.toLocaleString('vi-VN');
+    };
 
     const handleInputChange = (e) => {
         const { name, value } = e.target;
@@ -27,60 +64,48 @@ const LoginPage = () => {
         setIsLoading(true);
 
         try {
-            // Check mock accounts first
-            const allAccounts = [...adminAccounts, ...staffAccounts, ...userAccounts];
-            const mockAccount = allAccounts.find(
-                account => account.email === formData.email && account.password === formData.password
-            );
+            // Try real API login
+            console.log('Attempting real API login with:', { userName: formData.userName, password: formData.password });
 
-            if (mockAccount) {
-                // Mock successful login
-                console.log('Mock login successful:', mockAccount);
+            console.log('Making API call to:', `https://flower-subscription-for-student-be.onrender.com/auth/login?userName=${formData.userName}&password=${formData.password}`);
 
-                // Show success notification with SweetAlert2
-                await Swal.fire({
-                    icon: 'success',
-                    title: 'Đăng nhập thành công!',
-                    text: `Chào mừng ${mockAccount.name}!`,
-                    showConfirmButton: false,
-                    timer: 2000,
-                    timerProgressBar: true,
-                    background: '#f8fafc',
-                    color: '#1f2937',
-                    customClass: {
-                        popup: 'rounded-lg shadow-xl',
-                        title: 'text-xl font-bold text-gray-900',
-                        content: 'text-gray-600'
-                    }
-                });
-
-                setAuthData('mock-token-' + mockAccount.id, {
-                    email: mockAccount.email,
-                    name: mockAccount.name,
-                    role: mockAccount.role,
-                    authenticated: true
-                });
-
-                // Redirect based on role
-                if (mockAccount.role === 'admin') {
-                    window.location.href = '/admin';
-                } else if (mockAccount.role === 'staff') {
-                    window.location.href = '/staff';
-                } else {
-                    window.location.href = '/';
-                }
-                return;
-            }
-
-            // If not found in mock data, try real API
             const response = await authAPI.login({
-                userName: formData.email,
+                userName: formData.userName,
                 password: formData.password
             });
 
+            console.log('API Response received:', response);
+            console.log('Response status:', response.status);
+            console.log('Response headers:', response.headers);
             const data = response.data;
+            console.log('Response data:', data);
+
             if (data.code === 1010 && data.result.authenticated) {
                 console.log('Login successful:', data.result);
+                console.log('Token received:', data.result.token);
+                console.log('About to save auth data...');
+
+                // Decode và hiển thị thông tin token
+                const decodedToken = decodeToken(data.result.token);
+                if (decodedToken) {
+                    console.log('🔓 === TOKEN DECODED ===');
+                    console.log('Header:', decodedToken.header);
+                    console.log('Payload:', {
+                        subject: decodedToken.payload.sub,
+                        scope: decodedToken.payload.scope,
+                        issuer: decodedToken.payload.iss || 'N/A',
+                        issuedAt: formatDate(decodedToken.payload.iat),
+                        expiresAt: formatDate(decodedToken.payload.exp),
+                        jwtId: decodedToken.payload.jti
+                    });
+                    console.log('Token Status:', {
+                        expired: decodedToken.payload.exp * 1000 < Date.now() ? 'Yes' : 'No',
+                        validFor: decodedToken.payload.exp * 1000 > Date.now()
+                            ? `${Math.floor((decodedToken.payload.exp * 1000 - Date.now()) / (1000 * 60 * 60 * 24))} days`
+                            : 'Expired'
+                    });
+                    console.log('🔓 === END TOKEN DECODE ===');
+                }
 
                 // Show success notification with SweetAlert2
                 await Swal.fire({
@@ -88,7 +113,7 @@ const LoginPage = () => {
                     title: 'Đăng nhập thành công!',
                     text: 'Chào mừng bạn trở lại!',
                     showConfirmButton: false,
-                    timer: 2000,
+                    timer: 500,
                     timerProgressBar: true,
                     background: '#f8fafc',
                     color: '#1f2937',
@@ -99,11 +124,57 @@ const LoginPage = () => {
                     }
                 });
 
-                setAuthData(data.result.token, {
-                    email: formData.email,
-                    authenticated: true
-                });
-                window.location.href = '/';
+                // Save auth data with role information
+                const userData = {
+                    userName: formData.userName,
+                    authenticated: true,
+                    role: decodedToken.payload.scope, // Lưu role từ token
+                    userId: decodedToken.payload.sub, // Lưu user ID từ token
+                    issuedAt: decodedToken.payload.iat,
+                    expiresAt: decodedToken.payload.exp
+                };
+
+                setAuthData(data.result.token, userData);
+
+                // Check if data was saved
+                console.log('Auth data saved, checking localStorage...');
+                console.log('localStorage token:', localStorage.getItem('accessToken'));
+                console.log('localStorage userData:', localStorage.getItem('userData'));
+
+                // Redirect to appropriate dashboard based on role
+                setTimeout(() => {
+                    console.log('=== REDIRECT DEBUG ===');
+                    console.log('Redirecting to appropriate dashboard...');
+                    console.log('Final check - isAuthenticated:', isAuthenticated());
+                    console.log('Final check - token:', getToken());
+
+                    // Debug localStorage
+                    console.log('localStorage accessToken:', localStorage.getItem('accessToken'));
+                    console.log('localStorage userData:', localStorage.getItem('userData'));
+
+                    try {
+                        const userData = JSON.parse(localStorage.getItem('userData'));
+                        console.log('Parsed userData:', userData);
+                        console.log('Role from localStorage:', userData?.role);
+                    } catch (error) {
+                        console.error('Error parsing userData:', error);
+                    }
+
+                    // Redirect dựa trên role
+                    const role = decodedToken.payload.scope;
+                    console.log('Role from token:', role);
+
+                    if (role === 'ADMIN' || role === 'admin') {
+                        console.log('Redirecting to admin dashboard');
+                        window.location.href = '/admin';
+                    } else if (role === 'STAFF' || role === 'staff') {
+                        console.log('Redirecting to staff dashboard');
+                        window.location.href = '/staff';
+                    } else {
+                        console.log('Redirecting to user dashboard');
+                        window.location.href = '/'; // User thường
+                    }
+                }, 1000); // Tăng delay để đảm bảo localStorage đã được cập nhật
             } else {
                 Swal.fire({
                     icon: 'error',
@@ -120,8 +191,35 @@ const LoginPage = () => {
                 });
             }
         } catch (error) {
-            console.error('Login error:', error);
-            const errorMessage = error.response?.data?.message || 'Có lỗi xảy ra khi đăng nhập. Vui lòng thử lại.';
+            console.error('=== Login Error Details ===');
+            console.error('Error object:', error);
+            console.error('Error message:', error.message);
+            console.error('Error response:', error.response);
+            console.error('Error request:', error.request);
+            console.error('Error config:', error.config);
+
+            let errorMessage = 'Có lỗi xảy ra khi đăng nhập. Vui lòng thử lại.';
+
+            if (error.response) {
+                // Server responded with error status
+                console.error('Server error response:', error.response.data);
+                const serverError = error.response.data;
+
+                if (serverError.code === 1007) {
+                    errorMessage = 'Thông tin đăng nhập không chính xác. Vui lòng kiểm tra lại username và password.';
+                } else {
+                    errorMessage = serverError.message || `Server error: ${error.response.status}`;
+                }
+            } else if (error.request) {
+                // Request was made but no response received
+                console.error('No response received from server');
+                errorMessage = 'Không thể kết nối đến server. Vui lòng kiểm tra kết nối mạng.';
+            } else {
+                // Something else happened
+                console.error('Other error:', error.message);
+                errorMessage = error.message || 'Lỗi không xác định';
+            }
+
             Swal.fire({
                 icon: 'error',
                 title: 'Lỗi đăng nhập',
@@ -143,65 +241,37 @@ const LoginPage = () => {
     const handleGoogleLogin = async () => {
         try {
             setIsLoading(true);
-            if (typeof window !== 'undefined' && window.firebase) {
-                const auth = window.firebase.auth();
-                const provider = new window.firebase.auth.GoogleAuthProvider();
-                const result = await auth.signInWithPopup(provider);
-                const idToken = await result.user.getIdToken();
-                const response = await authAPI.googleLogin(idToken);
-                const data = response.data;
-                if (data.code === 1010) {
-                    console.log('Google login successful:', data.result);
 
-                    // Show success notification with SweetAlert2
+            // Initialize Firebase
+            initializeFirebase();
+            const auth = getFirebaseAuth();
+            const provider = getGoogleProvider();
+
+            if (!auth || !provider) {
+                throw new Error('Firebase Auth not available');
+            }
+
+            // Configure Google provider
+            provider.addScope('email');
+            provider.addScope('profile');
+
+            console.log('Initiating Google redirect...');
+            await auth.signInWithRedirect(provider);
+            // User will be redirected to Google, then back to /google-auth
+
+        } catch (error) {
+            console.error('Google login error:', error);
+
+            // Fallback to demo mode if Firebase fails
+            try {
+                console.log('Falling back to demo mode...');
+                const response = await authAPI.googleLogin({ idToken: "mock-google-id-token-for-demo" });
+                const data = response.data;
+
+                if (data.code === 1010) {
                     await Swal.fire({
                         icon: 'success',
-                        title: 'Đăng nhập Google thành công!',
-                        text: `Chào mừng ${data.result.name}!`,
-                        showConfirmButton: false,
-                        timer: 2000,
-                        timerProgressBar: true,
-                        background: '#f8fafc',
-                        color: '#1f2937',
-                        customClass: {
-                            popup: 'rounded-lg shadow-xl',
-                            title: 'text-xl font-bold text-gray-900',
-                            content: 'text-gray-600'
-                        }
-                    });
-
-                    setAuthData(data.result.token, {
-                        email: data.result.email,
-                        name: data.result.name,
-                        uid: data.result.uid,
-                        authenticated: true
-                    });
-                    window.location.href = '/';
-                } else {
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Đăng nhập Google thất bại',
-                        text: data.message,
-                        confirmButtonText: 'Thử lại',
-                        background: '#f8fafc',
-                        color: '#1f2937',
-                        customClass: {
-                            popup: 'rounded-lg shadow-xl',
-                            title: 'text-xl font-bold text-gray-900',
-                            content: 'text-gray-600'
-                        }
-                    });
-                }
-            } else {
-                console.log('Firebase not available, using mock login');
-                const response = await authAPI.googleLogin("mock-google-id-token-for-demo");
-                const data = response.data;
-                if (data.code === 1010) {
-
-                    // Show success notification with SweetAlert2
-                    await Swal.fire({
-                        icon: 'success',
-                        title: 'Đăng nhập Google thành công!',
+                        title: 'Đăng nhập Google Demo thành công!',
                         text: 'Chế độ demo - Chào mừng bạn!',
                         showConfirmButton: false,
                         timer: 2000,
@@ -223,37 +293,24 @@ const LoginPage = () => {
                     });
                     window.location.href = '/';
                 } else {
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Đăng nhập Google thất bại',
-                        text: data.message,
-                        confirmButtonText: 'Thử lại',
-                        background: '#f8fafc',
-                        color: '#1f2937',
-                        customClass: {
-                            popup: 'rounded-lg shadow-xl',
-                            title: 'text-xl font-bold text-gray-900',
-                            content: 'text-gray-600'
-                        }
-                    });
+                    throw new Error(data.message || 'Demo login failed');
                 }
+            } catch (demoError) {
+                console.error('Demo login error:', demoError);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Lỗi đăng nhập Google',
+                    text: 'Không thể đăng nhập với Google. Vui lòng thử lại.',
+                    confirmButtonText: 'Thử lại',
+                    background: '#f8fafc',
+                    color: '#1f2937',
+                    customClass: {
+                        popup: 'rounded-lg shadow-xl',
+                        title: 'text-xl font-bold text-gray-900',
+                        content: 'text-gray-600'
+                    }
+                });
             }
-        } catch (error) {
-            console.error('Google login error:', error);
-            const errorMessage = error.response?.data?.message || 'Có lỗi xảy ra khi đăng nhập Google. Vui lòng thử lại.';
-            Swal.fire({
-                icon: 'error',
-                title: 'Lỗi đăng nhập Google',
-                text: errorMessage,
-                confirmButtonText: 'Thử lại',
-                background: '#f8fafc',
-                color: '#1f2937',
-                customClass: {
-                    popup: 'rounded-lg shadow-xl',
-                    title: 'text-xl font-bold text-gray-900',
-                    content: 'text-gray-600'
-                }
-            });
         } finally {
             setIsLoading(false);
         }
@@ -278,22 +335,22 @@ const LoginPage = () => {
                 <div className="bg-white rounded-lg shadow-lg p-8">
                     <form onSubmit={handleSubmit} className="space-y-6">
                         <div>
-                            <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
-                                Email
+                            <label htmlFor="userName" className="block text-sm font-medium text-gray-700 mb-2">
+                                Tên đăng nhập
                             </label>
                             <div className="relative">
                                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                     <Mail className="h-5 w-5 text-gray-400" />
                                 </div>
                                 <input
-                                    id="email"
-                                    name="email"
-                                    type="email"
+                                    id="userName"
+                                    name="userName"
+                                    type="text"
                                     required
-                                    value={formData.email}
+                                    value={formData.userName}
                                     onChange={handleInputChange}
                                     className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-                                    placeholder="Nhập email của bạn"
+                                    placeholder="Nhập tên đăng nhập"
                                 />
                             </div>
                         </div>
@@ -361,6 +418,52 @@ const LoginPage = () => {
                                 'Đăng nhập'
                             )}
                         </button>
+
+                        {/* Test API Button */}
+                        <button
+                            type="button"
+                            onClick={async () => {
+                                console.log('=== Testing API Login ===');
+                                try {
+                                    const response = await authAPI.login({
+                                        userName: 'admin',
+                                        password: 'admin'
+                                    });
+                                    console.log('Test API Response:', response);
+                                    console.log('Test API Data:', response.data);
+
+                                    // Decode token nếu login thành công
+                                    if (response.data.code === 1010 && response.data.result.authenticated) {
+                                        const decodedToken = decodeToken(response.data.result.token);
+                                        if (decodedToken) {
+                                            console.log('🔓 === TEST TOKEN DECODED ===');
+                                            console.log('Header:', decodedToken.header);
+                                            console.log('Payload:', {
+                                                subject: decodedToken.payload.sub,
+                                                scope: decodedToken.payload.scope,
+                                                issuer: decodedToken.payload.iss || 'N/A',
+                                                issuedAt: formatDate(decodedToken.payload.iat),
+                                                expiresAt: formatDate(decodedToken.payload.exp),
+                                                jwtId: decodedToken.payload.jti
+                                            });
+                                            console.log('Token Status:', {
+                                                expired: decodedToken.payload.exp * 1000 < Date.now() ? 'Yes' : 'No',
+                                                validFor: decodedToken.payload.exp * 1000 > Date.now()
+                                                    ? `${Math.floor((decodedToken.payload.exp * 1000 - Date.now()) / (1000 * 60 * 60 * 24))} days`
+                                                    : 'Expired'
+                                            });
+                                            console.log('🔓 === END TEST TOKEN DECODE ===');
+                                        }
+                                    }
+                                } catch (error) {
+                                    console.error('Test API Error:', error);
+                                    console.error('Error Response:', error.response?.data);
+                                }
+                            }}
+                            className="w-full bg-gray-500 text-white py-2 px-4 rounded-lg text-sm font-medium hover:bg-gray-600 mt-2"
+                        >
+                            🧪 Test API Login (admin/admin)
+                        </button>
                     </form>
 
                     <div className="mt-6">
@@ -385,7 +488,7 @@ const LoginPage = () => {
                                     <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
                                     <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
                                 </svg>
-                                Đăng nhập với Google
+                                {isLoading ? 'Đang xử lý...' : 'Đăng nhập với Google'}
                             </button>
                         </div>
                     </div>
@@ -400,25 +503,8 @@ const LoginPage = () => {
                     </div>
                 </div>
 
-                {/* Test Accounts Info */}
-                <div className="mt-8 bg-blue-50 rounded-lg p-6">
-                    <h3 className="text-lg font-semibold text-blue-900 mb-4">Tài khoản test:</h3>
-                    <div className="space-y-3 text-sm">
-                        <div className="bg-white p-3 rounded border">
-                            <p className="font-medium text-blue-900">Admin:</p>
-                            <p className="text-gray-700">Email: admin@flowersub.com | Password: admin123</p>
-                        </div>
-                        <div className="bg-white p-3 rounded border">
-                            <p className="font-medium text-blue-900">Staff:</p>
-                            <p className="text-gray-700">Email: staff@flowersub.com | Password: staff123</p>
-                        </div>
-                        <div className="bg-white p-3 rounded border">
-                            <p className="font-medium text-blue-900">User:</p>
-                            <p className="text-gray-700">Email: user@test.com | Password: user123</p>
-                        </div>
-                    </div>
-                </div>
             </div>
+
         </div>
     );
 };

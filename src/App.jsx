@@ -18,6 +18,8 @@ import GoogleAuthHandler from './components/GoogleAuthHandler';
 import AdminDashboard from './admin/Dashboard';
 import AdminPackages from './admin/Packages';
 import AddPackage from './admin/AddPackage';
+import ViewDetailPackage from './admin/ViewDetailPackage';
+import EditPackage from './admin/EditPackage';
 import AdminOrders from './admin/Orders';
 import AdminFlowers from './admin/Flowers';
 import AdminCustomers from './admin/Customers';
@@ -50,6 +52,16 @@ function App() {
         <Route path="/admin/packages/add" element={
           <ProtectedRoute>
             <AddPackage />
+          </ProtectedRoute>
+        } />
+        <Route path="/admin/packages/view/:id" element={
+          <ProtectedRoute>
+            <ViewDetailPackage />
+          </ProtectedRoute>
+        } />
+        <Route path="/admin/packages/edit/:id" element={
+          <ProtectedRoute>
+            <EditPackage />
           </ProtectedRoute>
         } />
         <Route path="/admin/orders" element={

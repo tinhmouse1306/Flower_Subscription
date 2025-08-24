@@ -1,12 +1,14 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
-import { Menu, X, User, ShoppingCart, Heart, LogOut, Settings, Shield } from 'lucide-react';
+import { Menu, X, User, ShoppingCart, Heart, LogOut, Settings, Shield, ChevronDown, Package, UserCircle } from 'lucide-react';
 import { isAuthenticated, getUser, logout } from '../utils/auth';
 
 const Header = () => {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
+    const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
     const [isLoggedIn, setIsLoggedIn] = useState(false);
     const [user, setUser] = useState(null);
+    const userMenuRef = useRef(null);
 
     useEffect(() => {
         const checkAuth = () => {
@@ -30,6 +32,20 @@ const Header = () => {
     const handleLogout = () => {
         logout();
     };
+
+    // Close user menu when clicking outside
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (userMenuRef.current && !userMenuRef.current.contains(event.target)) {
+                setIsUserMenuOpen(false);
+            }
+        };
+
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
+    }, []);
 
     // Check user role from user data
     const isAdmin = user?.role === 'admin';
@@ -80,16 +96,52 @@ const Header = () => {
                         </Link>
 
                         {isLoggedIn ? (
-                            <div className="flex items-center space-x-2">
-                                <img
-                                    src="https://images.unsplash.com/photo-1494790108755-2616b612b786?w=32&h=32&fit=crop&crop=face"
-                                    alt="User"
-                                    className="w-8 h-8 rounded-full"
-                                />
-                                <div className="flex items-center space-x-2">
-                                    <span className="font-medium text-gray-700">
-                                        {user?.name || user?.email || 'User'}
+                            <div className="relative" ref={userMenuRef}>
+                                <button
+                                    onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
+                                    className="flex items-center space-x-2 text-gray-700 hover:text-primary-600 transition-colors"
+                                >
+                                    <span className="font-medium">
+                                        Welcome, {user?.fullName || user?.userName || 'User'}
                                     </span>
+                                    <ChevronDown size={16} className={`transition-transform ${isUserMenuOpen ? 'rotate-180' : ''}`} />
+                                </button>
+
+                                {/* User Menu Dropdown */}
+                                {isUserMenuOpen && (
+                                    <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50 border border-gray-200">
+                                        <Link
+                                            to="/profile"
+                                            className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+                                            onClick={() => setIsUserMenuOpen(false)}
+                                        >
+                                            <UserCircle size={16} className="mr-3" />
+                                            Hồ sơ cá nhân
+                                        </Link>
+                                        <Link
+                                            to="/orders"
+                                            className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+                                            onClick={() => setIsUserMenuOpen(false)}
+                                        >
+                                            <Package size={16} className="mr-3" />
+                                            Đơn hàng
+                                        </Link>
+                                        <div className="border-t border-gray-200 my-1"></div>
+                                        <button
+                                            onClick={() => {
+                                                handleLogout();
+                                                setIsUserMenuOpen(false);
+                                            }}
+                                            className="flex items-center w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors"
+                                        >
+                                            <LogOut size={16} className="mr-3" />
+                                            Đăng xuất
+                                        </button>
+                                    </div>
+                                )}
+
+                                {/* Role badges */}
+                                <div className="flex items-center space-x-1 mt-1">
                                     {isAdmin && (
                                         <span className="px-2 py-1 bg-red-100 text-red-800 text-xs rounded-full">
                                             Admin
@@ -100,12 +152,6 @@ const Header = () => {
                                             Staff
                                         </span>
                                     )}
-                                    <button
-                                        onClick={handleLogout}
-                                        className="text-gray-700 hover:text-primary-600 transition-colors"
-                                    >
-                                        <LogOut size={16} />
-                                    </button>
                                 </div>
                             </div>
                         ) : (
@@ -174,15 +220,28 @@ const Header = () => {
                                 {isLoggedIn ? (
                                     <div className="flex flex-col space-y-2">
                                         <div className="flex items-center space-x-2">
-                                            <img
-                                                src="https://images.unsplash.com/photo-1494790108755-2616b612b786?w=32&h=32&fit=crop&crop=face"
-                                                alt="User"
-                                                className="w-8 h-8 rounded-full"
-                                            />
                                             <span className="text-gray-700 font-medium">
-                                                {user?.name || user?.email || 'User'}
+                                                Welcome, {user?.fullName || user?.userName || 'User'}
                                             </span>
                                         </div>
+
+                                        <Link
+                                            to="/profile"
+                                            className="flex items-center space-x-2 text-gray-700 hover:text-primary-600 font-medium transition-colors"
+                                            onClick={() => setIsMenuOpen(false)}
+                                        >
+                                            <UserCircle size={16} />
+                                            <span>Hồ sơ cá nhân</span>
+                                        </Link>
+
+                                        <Link
+                                            to="/orders"
+                                            className="flex items-center space-x-2 text-gray-700 hover:text-primary-600 font-medium transition-colors"
+                                            onClick={() => setIsMenuOpen(false)}
+                                        >
+                                            <Package size={16} />
+                                            <span>Đơn hàng</span>
+                                        </Link>
 
                                         <button
                                             onClick={() => {

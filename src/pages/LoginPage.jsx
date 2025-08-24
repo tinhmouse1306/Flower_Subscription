@@ -64,47 +64,30 @@ const LoginPage = () => {
         setIsLoading(true);
 
         try {
-            // Try real API login
-            console.log('Attempting real API login with:', { userName: formData.userName, password: formData.password });
-
-            console.log('Making API call to:', `https://flower-subscription-for-student-be.onrender.com/auth/login?userName=${formData.userName}&password=${formData.password}`);
-
             const response = await authAPI.login({
                 userName: formData.userName,
                 password: formData.password
             });
 
-            console.log('API Response received:', response);
-            console.log('Response status:', response.status);
-            console.log('Response headers:', response.headers);
             const data = response.data;
-            console.log('Response data:', data);
+
+            // Debug: Log API response để xem có fullName không
+            console.log('📡 API Response:', data);
+            console.log('📡 Result data:', data.result);
+            console.log('📡 Result keys:', Object.keys(data.result || {}));
+            console.log('📡 Full data structure:', JSON.stringify(data, null, 2));
 
             if (data.code === 1010 && data.result.authenticated) {
-                console.log('Login successful:', data.result);
-                console.log('Token received:', data.result.token);
-                console.log('About to save auth data...');
-
-                // Decode và hiển thị thông tin token
+                // Decode token để lấy thông tin role
                 const decodedToken = decodeToken(data.result.token);
+
+                // Debug: Log toàn bộ payload để xem có fullName không
                 if (decodedToken) {
-                    console.log('🔓 === TOKEN DECODED ===');
-                    console.log('Header:', decodedToken.header);
-                    console.log('Payload:', {
-                        subject: decodedToken.payload.sub,
-                        scope: decodedToken.payload.scope,
-                        issuer: decodedToken.payload.iss || 'N/A',
-                        issuedAt: formatDate(decodedToken.payload.iat),
-                        expiresAt: formatDate(decodedToken.payload.exp),
-                        jwtId: decodedToken.payload.jti
-                    });
-                    console.log('Token Status:', {
-                        expired: decodedToken.payload.exp * 1000 < Date.now() ? 'Yes' : 'No',
-                        validFor: decodedToken.payload.exp * 1000 > Date.now()
-                            ? `${Math.floor((decodedToken.payload.exp * 1000 - Date.now()) / (1000 * 60 * 60 * 24))} days`
-                            : 'Expired'
-                    });
-                    console.log('🔓 === END TOKEN DECODE ===');
+                    console.log('🔓 Token Payload:', decodedToken.payload);
+                    console.log('🔓 Available fields:', Object.keys(decodedToken.payload));
+                    console.log('🔓 Token fullName:', decodedToken.payload.fullName);
+                    console.log('🔓 Token name:', decodedToken.payload.name);
+                    console.log('🔓 Token email:', decodedToken.payload.email);
                 }
 
                 // Show success notification with SweetAlert2
@@ -113,7 +96,7 @@ const LoginPage = () => {
                     title: 'Đăng nhập thành công!',
                     text: 'Chào mừng bạn trở lại!',
                     showConfirmButton: false,
-                    timer: 500,
+                    timer: 2000,
                     timerProgressBar: true,
                     background: '#f8fafc',
                     color: '#1f2937',
@@ -128,53 +111,40 @@ const LoginPage = () => {
                 const userData = {
                     userName: formData.userName,
                     authenticated: true,
-                    role: decodedToken.payload.scope, // Lưu role từ token
-                    userId: decodedToken.payload.sub, // Lưu user ID từ token
+                    role: decodedToken.payload.scope,
+                    userId: decodedToken.payload.sub,
+                    // Thử lấy fullName từ nhiều nguồn khác nhau
+                    fullName: data.result.fullName ||
+                        data.result.email ||
+                        decodedToken.payload.fullName ||
+                        decodedToken.payload.name ||
+                        decodedToken.payload.email ||
+                        formData.userName,
+                    email: data.result.email ||
+                        decodedToken.payload.email,
                     issuedAt: decodedToken.payload.iat,
                     expiresAt: decodedToken.payload.exp
                 };
 
                 setAuthData(data.result.token, userData);
 
-                // Check if data was saved
-                console.log('Auth data saved, checking localStorage...');
-                console.log('localStorage token:', localStorage.getItem('accessToken'));
-                console.log('localStorage userData:', localStorage.getItem('userData'));
+                // Debug: Log userData để xem fullName
+                console.log('👤 UserData saved:', userData);
+                console.log('👤 FullName extracted:', userData.fullName);
+                console.log('👤 Email extracted:', userData.email);
 
                 // Redirect to appropriate dashboard based on role
                 setTimeout(() => {
-                    console.log('=== REDIRECT DEBUG ===');
-                    console.log('Redirecting to appropriate dashboard...');
-                    console.log('Final check - isAuthenticated:', isAuthenticated());
-                    console.log('Final check - token:', getToken());
-
-                    // Debug localStorage
-                    console.log('localStorage accessToken:', localStorage.getItem('accessToken'));
-                    console.log('localStorage userData:', localStorage.getItem('userData'));
-
-                    try {
-                        const userData = JSON.parse(localStorage.getItem('userData'));
-                        console.log('Parsed userData:', userData);
-                        console.log('Role from localStorage:', userData?.role);
-                    } catch (error) {
-                        console.error('Error parsing userData:', error);
-                    }
-
-                    // Redirect dựa trên role
                     const role = decodedToken.payload.scope;
-                    console.log('Role from token:', role);
 
                     if (role === 'ADMIN' || role === 'admin') {
-                        console.log('Redirecting to admin dashboard');
                         window.location.href = '/admin';
                     } else if (role === 'STAFF' || role === 'staff') {
-                        console.log('Redirecting to staff dashboard');
                         window.location.href = '/staff';
                     } else {
-                        console.log('Redirecting to user dashboard');
                         window.location.href = '/'; // User thường
                     }
-                }, 1000); // Tăng delay để đảm bảo localStorage đã được cập nhật
+                }, 1000);
             } else {
                 Swal.fire({
                     icon: 'error',
@@ -191,18 +161,9 @@ const LoginPage = () => {
                 });
             }
         } catch (error) {
-            console.error('=== Login Error Details ===');
-            console.error('Error object:', error);
-            console.error('Error message:', error.message);
-            console.error('Error response:', error.response);
-            console.error('Error request:', error.request);
-            console.error('Error config:', error.config);
-
             let errorMessage = 'Có lỗi xảy ra khi đăng nhập. Vui lòng thử lại.';
 
             if (error.response) {
-                // Server responded with error status
-                console.error('Server error response:', error.response.data);
                 const serverError = error.response.data;
 
                 if (serverError.code === 1007) {
@@ -211,12 +172,8 @@ const LoginPage = () => {
                     errorMessage = serverError.message || `Server error: ${error.response.status}`;
                 }
             } else if (error.request) {
-                // Request was made but no response received
-                console.error('No response received from server');
                 errorMessage = 'Không thể kết nối đến server. Vui lòng kiểm tra kết nối mạng.';
             } else {
-                // Something else happened
-                console.error('Other error:', error.message);
                 errorMessage = error.message || 'Lỗi không xác định';
             }
 
@@ -255,62 +212,23 @@ const LoginPage = () => {
             provider.addScope('email');
             provider.addScope('profile');
 
-            console.log('Initiating Google redirect...');
             await auth.signInWithRedirect(provider);
             // User will be redirected to Google, then back to /google-auth
 
         } catch (error) {
-            console.error('Google login error:', error);
-
-            // Fallback to demo mode if Firebase fails
-            try {
-                console.log('Falling back to demo mode...');
-                const response = await authAPI.googleLogin({ idToken: "mock-google-id-token-for-demo" });
-                const data = response.data;
-
-                if (data.code === 1010) {
-                    await Swal.fire({
-                        icon: 'success',
-                        title: 'Đăng nhập Google Demo thành công!',
-                        text: 'Chế độ demo - Chào mừng bạn!',
-                        showConfirmButton: false,
-                        timer: 2000,
-                        timerProgressBar: true,
-                        background: '#f8fafc',
-                        color: '#1f2937',
-                        customClass: {
-                            popup: 'rounded-lg shadow-xl',
-                            title: 'text-xl font-bold text-gray-900',
-                            content: 'text-gray-600'
-                        }
-                    });
-
-                    setAuthData(data.result.token, {
-                        email: data.result.email,
-                        name: data.result.name,
-                        uid: data.result.uid,
-                        authenticated: true
-                    });
-                    window.location.href = '/';
-                } else {
-                    throw new Error(data.message || 'Demo login failed');
+            Swal.fire({
+                icon: 'error',
+                title: 'Lỗi đăng nhập Google',
+                text: 'Không thể đăng nhập với Google. Vui lòng thử lại.',
+                confirmButtonText: 'Thử lại',
+                background: '#f8fafc',
+                color: '#1f2937',
+                customClass: {
+                    popup: 'rounded-lg shadow-xl',
+                    title: 'text-xl font-bold text-gray-900',
+                    content: 'text-gray-600'
                 }
-            } catch (demoError) {
-                console.error('Demo login error:', demoError);
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Lỗi đăng nhập Google',
-                    text: 'Không thể đăng nhập với Google. Vui lòng thử lại.',
-                    confirmButtonText: 'Thử lại',
-                    background: '#f8fafc',
-                    color: '#1f2937',
-                    customClass: {
-                        popup: 'rounded-lg shadow-xl',
-                        title: 'text-xl font-bold text-gray-900',
-                        content: 'text-gray-600'
-                    }
-                });
-            }
+            });
         } finally {
             setIsLoading(false);
         }
@@ -419,51 +337,6 @@ const LoginPage = () => {
                             )}
                         </button>
 
-                        {/* Test API Button */}
-                        <button
-                            type="button"
-                            onClick={async () => {
-                                console.log('=== Testing API Login ===');
-                                try {
-                                    const response = await authAPI.login({
-                                        userName: 'admin',
-                                        password: 'admin'
-                                    });
-                                    console.log('Test API Response:', response);
-                                    console.log('Test API Data:', response.data);
-
-                                    // Decode token nếu login thành công
-                                    if (response.data.code === 1010 && response.data.result.authenticated) {
-                                        const decodedToken = decodeToken(response.data.result.token);
-                                        if (decodedToken) {
-                                            console.log('🔓 === TEST TOKEN DECODED ===');
-                                            console.log('Header:', decodedToken.header);
-                                            console.log('Payload:', {
-                                                subject: decodedToken.payload.sub,
-                                                scope: decodedToken.payload.scope,
-                                                issuer: decodedToken.payload.iss || 'N/A',
-                                                issuedAt: formatDate(decodedToken.payload.iat),
-                                                expiresAt: formatDate(decodedToken.payload.exp),
-                                                jwtId: decodedToken.payload.jti
-                                            });
-                                            console.log('Token Status:', {
-                                                expired: decodedToken.payload.exp * 1000 < Date.now() ? 'Yes' : 'No',
-                                                validFor: decodedToken.payload.exp * 1000 > Date.now()
-                                                    ? `${Math.floor((decodedToken.payload.exp * 1000 - Date.now()) / (1000 * 60 * 60 * 24))} days`
-                                                    : 'Expired'
-                                            });
-                                            console.log('🔓 === END TEST TOKEN DECODE ===');
-                                        }
-                                    }
-                                } catch (error) {
-                                    console.error('Test API Error:', error);
-                                    console.error('Error Response:', error.response?.data);
-                                }
-                            }}
-                            className="w-full bg-gray-500 text-white py-2 px-4 rounded-lg text-sm font-medium hover:bg-gray-600 mt-2"
-                        >
-                            🧪 Test API Login (admin/admin)
-                        </button>
                     </form>
 
                     <div className="mt-6">

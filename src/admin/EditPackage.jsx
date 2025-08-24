@@ -1,13 +1,15 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
 import AdminLayout from './AdminLayout';
-import { adminAPI } from '../utils/api';
+import { adminAPI, subscriptionAPI } from '../utils/api';
 import { ArrowLeft, Save, X } from 'lucide-react';
 import Swal from 'sweetalert2';
 
-const AddPackage = () => {
+const EditPackage = () => {
+    const { id } = useParams();
     const navigate = useNavigate();
     const [isLoading, setIsLoading] = useState(false);
+    const [isSaving, setIsSaving] = useState(false);
     const [formData, setFormData] = useState({
         name: '',
         description: '',
@@ -16,6 +18,52 @@ const AddPackage = () => {
         deliveriesPerMonth: ''
     });
 
+    useEffect(() => {
+        fetchPackageDetail();
+    }, [id]);
+
+    const fetchPackageDetail = async () => {
+        setIsLoading(true);
+        try {
+            console.log('Fetching package detail for editing, ID:', id);
+            const response = await subscriptionAPI.getPackageDetail(id);
+            console.log('Package detail for edit response:', response);
+
+            if (response.data) {
+                const packageData = response.data;
+                console.log('Package data received:', packageData);
+                setFormData({
+                    name: packageData.name || '',
+                    description: packageData.description || '',
+                    price: packageData.price || '',
+                    durationMonths: packageData.durationMonths || '',
+                    deliveriesPerMonth: packageData.deliveriesPerMonth || ''
+                });
+            } else {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Lỗi!',
+                    text: 'Không tìm thấy thông tin gói dịch vụ',
+                    confirmButtonText: 'Quay lại'
+                }).then(() => {
+                    navigate('/admin/packages');
+                });
+            }
+        } catch (error) {
+            console.error('Error fetching package detail:', error);
+            Swal.fire({
+                icon: 'error',
+                title: 'Lỗi!',
+                text: 'Không thể tải thông tin gói dịch vụ',
+                confirmButtonText: 'Quay lại'
+            }).then(() => {
+                navigate('/admin/packages');
+            });
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
     const handleInputChange = (e) => {
         const { name, value } = e.target;
 
@@ -23,14 +71,14 @@ const AddPackage = () => {
         if (name === 'durationMonths') {
             const numValue = parseInt(value);
             if (numValue < 1 || numValue > 12) {
-                return; // Không cho phép nhập ngoài khoảng 1-6
+                return; // Không cho phép nhập ngoài khoảng 1-12
             }
         }
 
         if (name === 'deliveriesPerMonth') {
             const numValue = parseInt(value);
             if (numValue < 1 || numValue > 31) {
-                return; // Không cho phép nhập ngoài khoảng 1-4
+                return; // Không cho phép nhập ngoài khoảng 1-31
             }
         }
 
@@ -42,10 +90,10 @@ const AddPackage = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        setIsLoading(true);
+        setIsSaving(true);
 
         try {
-            console.log('Creating new package with data:', formData);
+            console.log('Updating package with data:', formData);
 
             const packageData = {
                 name: formData.name,
@@ -55,8 +103,8 @@ const AddPackage = () => {
                 deliveriesPerMonth: parseInt(formData.deliveriesPerMonth)
             };
 
-            const response = await adminAPI.createPackage(packageData);
-            console.log('Create package response:', response);
+            const response = await adminAPI.updatePackage(id, packageData);
+            console.log('Update package response:', response);
             console.log('Response status:', response.status);
             console.log('Response data:', response.data);
 
@@ -68,7 +116,7 @@ const AddPackage = () => {
                 await Swal.fire({
                     icon: 'success',
                     title: 'Thành công!',
-                    text: 'Gói dịch vụ đã được tạo thành công',
+                    text: 'Gói dịch vụ đã được cập nhật thành công',
                     showConfirmButton: false,
                     timer: 2000
                 });
@@ -77,12 +125,9 @@ const AddPackage = () => {
                 throw new Error(response.data?.message || 'Có lỗi xảy ra');
             }
         } catch (error) {
-            console.error('Error creating package:', error);
-            console.error('Error response:', error.response);
-            console.error('Error status:', error.response?.status);
-            console.error('Error data:', error.response?.data);
+            console.error('Error updating package:', error);
 
-            let errorMessage = 'Có lỗi xảy ra khi tạo gói dịch vụ';
+            let errorMessage = 'Có lỗi xảy ra khi cập nhật gói dịch vụ';
             if (error.response?.data?.message) {
                 errorMessage = error.response.data.message;
             } else if (error.message) {
@@ -96,9 +141,20 @@ const AddPackage = () => {
                 confirmButtonText: 'Thử lại'
             });
         } finally {
-            setIsLoading(false);
+            setIsSaving(false);
         }
     };
+
+    if (isLoading) {
+        return (
+            <AdminLayout>
+                <div className="flex items-center justify-center min-h-screen">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-600"></div>
+                    <span className="ml-3 text-gray-600">Đang tải thông tin...</span>
+                </div>
+            </AdminLayout>
+        );
+    }
 
     return (
         <AdminLayout>
@@ -114,8 +170,8 @@ const AddPackage = () => {
                             Quay lại
                         </button>
                     </div>
-                    <h1 className="text-2xl font-bold text-gray-900">Thêm gói dịch vụ mới</h1>
-                    <p className="text-gray-600">Tạo gói dịch vụ mới cho hệ thống FlowerSub</p>
+                    <h1 className="text-2xl font-bold text-gray-900">Chỉnh sửa gói dịch vụ</h1>
+                    <p className="text-gray-600">Cập nhật thông tin gói dịch vụ #{id}</p>
                 </div>
 
                 {/* Form */}
@@ -153,11 +209,11 @@ const AddPackage = () => {
                                     value={formData.price}
                                     onChange={handleInputChange}
                                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500"
-                                    placeholder="299000"
+                                    placeholder="150000"
                                 />
                             </div>
 
-                            {/* Duration Months */}
+                            {/* Duration */}
                             <div>
                                 <label htmlFor="durationMonths" className="block text-sm font-medium text-gray-700 mb-2">
                                     Thời hạn (tháng) *
@@ -174,7 +230,6 @@ const AddPackage = () => {
                                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500"
                                     placeholder="1"
                                 />
-                                <p className="text-xs text-gray-500 mt-1">Từ 1 đến 12 tháng</p>
                             </div>
 
                             {/* Deliveries per month */}
@@ -188,13 +243,12 @@ const AddPackage = () => {
                                     name="deliveriesPerMonth"
                                     required
                                     min="1"
-                                    max="31"
+                                    max="30"
                                     value={formData.deliveriesPerMonth}
                                     onChange={handleInputChange}
                                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500"
-                                    placeholder="1"
+                                    placeholder="4"
                                 />
-                                <p className="text-xs text-gray-500 mt-1">Từ 1 đến 31 lần/tháng</p>
                             </div>
                         </div>
 
@@ -226,18 +280,18 @@ const AddPackage = () => {
                             </button>
                             <button
                                 type="submit"
-                                disabled={isLoading}
+                                disabled={isSaving}
                                 className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 disabled:opacity-50 disabled:cursor-not-allowed"
                             >
-                                {isLoading ? (
+                                {isSaving ? (
                                     <div className="flex items-center">
                                         <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                                        Đang tạo...
+                                        Đang cập nhật...
                                     </div>
                                 ) : (
                                     <>
                                         <Save size={16} className="mr-2 inline" />
-                                        Tạo gói dịch vụ
+                                        Cập nhật gói dịch vụ
                                     </>
                                 )}
                             </button>
@@ -249,4 +303,4 @@ const AddPackage = () => {
     );
 };
 
-export default AddPackage;
+export default EditPackage;

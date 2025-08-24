@@ -75,6 +75,9 @@ export const subscriptionAPI = {
     // Get packages
     getPackages: () => api.get('/api/packages'),
 
+    // Get package detail
+    getPackageDetail: (id) => api.get(`/api/packages/${id}`),
+
     // Get flowers
     getFlowers: () => api.get('/api/flowers'),
 
@@ -98,6 +101,7 @@ export const adminAPI = {
 
     // Package management
     createPackage: (data) => api.post('/api/admin/packages', data),
+    getPackageDetail: (id) => api.get(`/api/admin/packages/${id}`),
     updatePackage: (id, data) => api.put(`/api/admin/packages/${id}`, data),
     deletePackage: (id) => api.delete(`/api/admin/packages/${id}`),
     updatePackageStatus: (id, status) => api.patch(`/api/admin/packages/${id}/status`, { status }),

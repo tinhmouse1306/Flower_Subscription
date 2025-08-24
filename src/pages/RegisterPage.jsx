@@ -1,17 +1,16 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Eye, EyeOff, Mail, Lock, User, Phone, MapPin } from 'lucide-react';
+import { Eye, EyeOff, Mail, Lock, User } from 'lucide-react';
 import { authAPI } from '../utils/api';
 
 const RegisterPage = () => {
     const [formData, setFormData] = useState({
+        userName: '',
         firstName: '',
         lastName: '',
         email: '',
-        phone: '',
         password: '',
-        confirmPassword: '',
-        address: ''
+        confirmPassword: ''
     });
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -39,7 +38,7 @@ const RegisterPage = () => {
 
         try {
             const response = await authAPI.register({
-                userName: formData.firstName + formData.lastName,
+                userName: formData.userName,
                 password: formData.password,
                 email: formData.email,
                 fullName: formData.firstName + ' ' + formData.lastName,
@@ -91,26 +90,42 @@ const RegisterPage = () => {
                     <form onSubmit={handleSubmit} className="space-y-6">
                         <h3 className="text-xl font-semibold text-gray-900 mb-6">Thông tin cá nhân</h3>
 
+                        <div>
+                            <label htmlFor="userName" className="block text-sm font-medium text-gray-700 mb-2">
+                                Tên đăng nhập *
+                            </label>
+                            <div className="relative">
+                                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                    <User className="h-5 w-5 text-gray-400" />
+                                </div>
+                                <input
+                                    id="userName"
+                                    name="userName"
+                                    type="text"
+                                    required
+                                    value={formData.userName}
+                                    onChange={handleInputChange}
+                                    className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                                    placeholder="Nhập tên đăng nhập"
+                                />
+                            </div>
+                        </div>
+
                         <div className="grid md:grid-cols-2 gap-4">
                             <div>
                                 <label htmlFor="firstName" className="block text-sm font-medium text-gray-700 mb-2">
                                     Họ và tên đệm *
                                 </label>
-                                <div className="relative">
-                                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                        <User className="h-5 w-5 text-gray-400" />
-                                    </div>
-                                    <input
-                                        id="firstName"
-                                        name="firstName"
-                                        type="text"
-                                        required
-                                        value={formData.firstName}
-                                        onChange={handleInputChange}
-                                        className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                                        placeholder="Nhập họ và tên đệm"
-                                    />
-                                </div>
+                                <input
+                                    id="firstName"
+                                    name="firstName"
+                                    type="text"
+                                    required
+                                    value={formData.firstName}
+                                    onChange={handleInputChange}
+                                    className="block w-full px-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                                    placeholder="Nhập họ và tên đệm"
+                                />
                             </div>
 
                             <div>
@@ -151,46 +166,7 @@ const RegisterPage = () => {
                             </div>
                         </div>
 
-                        <div>
-                            <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-2">
-                                Số điện thoại *
-                            </label>
-                            <div className="relative">
-                                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                    <Phone className="h-5 w-5 text-gray-400" />
-                                </div>
-                                <input
-                                    id="phone"
-                                    name="phone"
-                                    type="tel"
-                                    required
-                                    value={formData.phone}
-                                    onChange={handleInputChange}
-                                    className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                                    placeholder="Nhập số điện thoại"
-                                />
-                            </div>
-                        </div>
 
-                        <div>
-                            <label htmlFor="address" className="block text-sm font-medium text-gray-700 mb-2">
-                                Địa chỉ giao hàng
-                            </label>
-                            <div className="relative">
-                                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                    <MapPin className="h-5 w-5 text-gray-400" />
-                                </div>
-                                <textarea
-                                    id="address"
-                                    name="address"
-                                    rows={3}
-                                    value={formData.address}
-                                    onChange={handleInputChange}
-                                    className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                                    placeholder="Nhập địa chỉ giao hàng"
-                                />
-                            </div>
-                        </div>
 
                         <div>
                             <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">

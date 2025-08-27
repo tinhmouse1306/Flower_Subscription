@@ -432,27 +432,17 @@ export const subscriptionPlans = [
 export const paymentMethods = [
     {
         id: 1,
+        code: 'CASH',
         name: "Tiền mặt",
         description: "Thanh toán khi nhận hàng",
         icon: "💵"
     },
     {
         id: 2,
-        name: "Chuyển khoản ngân hàng",
-        description: "Chuyển khoản qua ngân hàng",
-        icon: "🏦"
-    },
-    {
-        id: 3,
-        name: "Ví điện tử",
-        description: "Momo, ZaloPay, VNPay",
+        code: 'VNPAY',
+        name: "VNPAY",
+        description: "Thanh toán qua cổng VNPAY",
         icon: "📱"
-    },
-    {
-        id: 4,
-        name: "Thẻ tín dụng",
-        description: "Visa, Mastercard",
-        icon: "💳"
     }
 ];
 

@@ -1,22 +1,43 @@
-import { useState } from 'react';
-import { subscriptionPlans, deliveryTimeSlots, paymentMethods, studentDiscounts } from '../data/mockData';
-import { Calendar, Clock, CreditCard, Gift, Users, CheckCircle } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { useLocation } from 'react-router-dom';
+import { paymentMethods, studentDiscounts } from '../data/mockData';
+import { Calendar, CreditCard, Gift, Users } from 'lucide-react';
+import { subscriptionAPI, paymentAPI } from '../utils/api';
 
 const SubscriptionPage = () => {
     const [selectedPlan, setSelectedPlan] = useState(null);
-    const [selectedTimeSlot, setSelectedTimeSlot] = useState(null);
     const [selectedPayment, setSelectedPayment] = useState(null);
     const [appliedDiscount, setAppliedDiscount] = useState(null);
     const [discountCode, setDiscountCode] = useState('');
     const [isStudent, setIsStudent] = useState(false);
     const [studentId, setStudentId] = useState('');
+    const location = useLocation();
+
+    useEffect(() => {
+        const params = new URLSearchParams(location.search);
+        const packageId = params.get('packageId');
+        if (packageId) {
+            subscriptionAPI.getPackageDetail(packageId)
+                .then(res => {
+                    const p = res.data;
+                    const plan = {
+                        id: p.packageId || p.id,
+                        name: p.name,
+                        description: p.description,
+                        price: p.price,
+                        duration: p.durationMonths || p.duration,
+                        image: p.image
+                    };
+                    setSelectedPlan(plan);
+                })
+                .catch(() => {
+                    setSelectedPlan(null);
+                });
+        }
+    }, [location.search]);
 
     const handlePlanSelect = (plan) => {
         setSelectedPlan(plan);
-    };
-
-    const handleTimeSlotSelect = (slot) => {
-        setSelectedTimeSlot(slot);
     };
 
     const handlePaymentSelect = (payment) => {
@@ -45,21 +66,25 @@ const SubscriptionPage = () => {
         return total;
     };
 
-    const handleSubmit = () => {
-        if (!selectedPlan || !selectedTimeSlot || !selectedPayment) {
+    const handleSubmit = async () => {
+        if (!selectedPlan || !selectedPayment) {
             alert('Vui lòng chọn đầy đủ thông tin!');
             return;
         }
-
-        console.log('Đăng ký gói:', {
-            plan: selectedPlan,
-            timeSlot: selectedTimeSlot,
-            payment: selectedPayment,
-            discount: appliedDiscount,
-            isStudent,
-            studentId,
-            total: calculateTotal()
-        });
+        // Nếu chọn VNPAY thì tạo payment và redirect
+        if (selectedPayment?.code === 'VNPAY') {
+            try {
+                const res = await paymentAPI.create(Math.round(calculateTotal()));
+                const paymentUrl = res.data?.result || res.data;
+                if (paymentUrl) {
+                    window.location.href = paymentUrl;
+                    return;
+                }
+            } catch (e) {
+                alert('Không thể tạo thanh toán VNPAY.');
+                return;
+            }
+        }
 
         alert('Đăng ký thành công! Chúng tôi sẽ liên hệ với bạn sớm nhất.');
     };
@@ -86,82 +111,41 @@ const SubscriptionPage = () => {
                     {/* Left Column - Selection */}
                     <div className="lg:col-span-2 space-y-8">
 
-                        {/* Plan Selection */}
+                        {/* Selected Plan (from API) */}
                         <div className="card">
                             <div className="flex items-center mb-6">
                                 <Calendar className="w-6 h-6 text-primary-600 mr-3" />
                                 <h2 className="text-2xl font-bold text-gray-900">
-                                    Chọn gói đăng ký
+                                    Gói đăng ký đã chọn
                                 </h2>
                             </div>
-                            <div className="grid md:grid-cols-2 gap-4">
-                                {subscriptionPlans.map((plan) => (
-                                    <div
-                                        key={plan.id}
-                                        onClick={() => handlePlanSelect(plan)}
-                                        className={`card cursor-pointer transition-all duration-200 hover:shadow-lg ${selectedPlan?.id === plan.id ? 'ring-2 ring-primary-500' : ''
-                                            }`}
-                                    >
+                            {selectedPlan ? (
+                                <div className="grid md:grid-cols-2 gap-4">
+                                    <div className={`card ring-2 ring-primary-500`}>
                                         <div className="text-center">
-                                            {plan.popular && (
-                                                <div className="bg-primary-500 text-white text-sm font-medium px-3 py-1 rounded-full mb-4 inline-block">
-                                                    Phổ biến
-                                                </div>
-                                            )}
                                             <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                                                {plan.name}
+                                                {selectedPlan.name}
                                             </h3>
                                             <div className="text-3xl font-bold text-primary-600 mb-2">
-                                                {plan.price.toLocaleString('vi-VN')}đ
+                                                {Number(selectedPlan.price || 0).toLocaleString('vi-VN')}đ
                                             </div>
-                                            <div className="text-gray-500 line-through mb-2">
-                                                {plan.originalPrice.toLocaleString('vi-VN')}đ
-                                            </div>
-                                            <p className="text-gray-600 mb-4">
-                                                {plan.description}
-                                            </p>
+                                            {selectedPlan.description && (
+                                                <p className="text-gray-600 mb-4">
+                                                    {selectedPlan.description}
+                                                </p>
+                                            )}
                                             <div className="text-sm text-gray-500">
-                                                {plan.duration} tháng
+                                                {selectedPlan.duration} tháng
                                             </div>
                                         </div>
                                     </div>
-                                ))}
-                            </div>
+                                </div>
+                            ) : (
+                                <div className="text-gray-600">Không tìm thấy thông tin gói. Vui lòng quay lại chọn gói.</div>
+                            )}
                         </div>
 
-                        {/* Delivery Time Selection */}
-                        <div className="card">
-                            <div className="flex items-center mb-6">
-                                <Clock className="w-6 h-6 text-primary-600 mr-3" />
-                                <h2 className="text-2xl font-bold text-gray-900">
-                                    Chọn thời gian giao hàng
-                                </h2>
-                            </div>
-                            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-                                {deliveryTimeSlots.map((slot) => (
-                                    <div
-                                        key={slot.id}
-                                        onClick={() => slot.available && handleTimeSlotSelect(slot)}
-                                        className={`card cursor-pointer transition-all duration-200 hover:shadow-lg ${selectedTimeSlot?.id === slot.id ? 'ring-2 ring-primary-500' : ''
-                                            } ${!slot.available ? 'opacity-50 cursor-not-allowed' : ''}`}
-                                    >
-                                        <div className="text-center">
-                                            <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                                                {slot.time}
-                                            </h3>
-                                            <p className="text-gray-600">
-                                                {slot.description}
-                                            </p>
-                                            {!slot.available && (
-                                                <div className="text-red-500 text-sm mt-2">
-                                                    Không khả dụng
-                                                </div>
-                                            )}
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
+                        {/* Bỏ chọn thời gian giao hàng theo yêu cầu */}
 
                         {/* Payment Method Selection */}
                         <div className="card">
@@ -224,17 +208,7 @@ const SubscriptionPage = () => {
                             )}
 
                             {/* Selected Time Slot */}
-                            {selectedTimeSlot && (
-                                <div className="mb-6">
-                                    <h3 className="font-semibold text-gray-900 mb-2">
-                                        Thời gian giao:
-                                    </h3>
-                                    <div className="bg-gray-50 p-4 rounded-lg">
-                                        <div className="font-medium">{selectedTimeSlot.time}</div>
-                                        <div className="text-sm text-gray-500">{selectedTimeSlot.description}</div>
-                                    </div>
-                                </div>
-                            )}
+                            {/* Không hiển thị thời gian giao hàng */}
                             {/* Total */}
                             <div className="border-t pt-6">
                                 <div className="flex justify-between items-center text-lg font-semibold text-gray-900">
@@ -253,7 +227,7 @@ const SubscriptionPage = () => {
                             {/* Submit Button */}
                             <button
                                 onClick={handleSubmit}
-                                disabled={!selectedPlan || !selectedTimeSlot || !selectedPayment}
+                                disabled={!selectedPlan || !selectedPayment}
                                 className="w-full btn-primary text-lg py-4 mt-6 disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                                 Đăng ký ngay

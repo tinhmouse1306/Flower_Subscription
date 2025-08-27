@@ -212,14 +212,36 @@ const LoginPage = () => {
             provider.addScope('email');
             provider.addScope('profile');
 
-            await auth.signInWithRedirect(provider);
-            // User will be redirected to Google, then back to /google-auth
+            // Popup-based Google Sign-In
+            const result = await auth.signInWithPopup(provider);
+            const idToken = await result.user.getIdToken();
+
+            const response = await authAPI.googleLogin({ idToken });
+            const data = response.data;
+
+            if (data.code === 1010) {
+                await Swal.fire({
+                    icon: 'success',
+                    title: 'Đăng nhập Google thành công!'
+                });
+
+                setAuthData(data.result.token, {
+                    email: data.result.email,
+                    name: data.result.name,
+                    uid: data.result.uid,
+                    authenticated: true
+                });
+
+                window.location.href = '/';
+            } else {
+                throw new Error(data.message || 'Server authentication failed');
+            }
 
         } catch (error) {
             Swal.fire({
                 icon: 'error',
                 title: 'Lỗi đăng nhập Google',
-                text: 'Không thể đăng nhập với Google. Vui lòng thử lại.',
+                text: error.message || 'Không thể đăng nhập với Google. Vui lòng thử lại.',
                 confirmButtonText: 'Thử lại',
                 background: '#f8fafc',
                 color: '#1f2937',

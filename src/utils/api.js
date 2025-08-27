@@ -13,6 +13,11 @@ const api = axios.create({
 // Request interceptor - tự động thêm token
 api.interceptors.request.use(
     (config) => {
+        // Bỏ qua gắn token nếu request đánh dấu skipAuth
+        if (config && config.skipAuth) {
+            return config;
+        }
+
         const token = getToken();
         if (token) {
             config.headers.Authorization = `Bearer ${token}`;
@@ -30,8 +35,8 @@ api.interceptors.response.use(
         return response;
     },
     (error) => {
-        // Xử lý lỗi 401 - Unauthorized
-        if (error.response?.status === 401) {
+        // Xử lý lỗi 401 - Unauthorized (trừ khi request đánh dấu skipAuth)
+        if (error.response?.status === 401 && !error.config?.skipAuth) {
             logout();
         }
 
@@ -53,8 +58,8 @@ export const authAPI = {
     register: (userData, role = 'user') =>
         api.post(`/api/register?userRoleChoice=${role}`, userData),
 
-    // Google Login
-    googleLogin: (data) => api.post('/auth/googleLogin', data),
+    // Google Login (không gửi Bearer token)
+    googleLogin: (data) => api.post('/auth/googleLogin', data, { skipAuth: true }),
 
     // Verify Token
     verifyToken: (token) => api.post('/auth/verifyToken', { token }),
@@ -108,10 +113,11 @@ export const adminAPI = {
 
     // Flower management
     getFlowers: () => api.get('/api/admin/flowers'),
+    getFlowerDetail: (flowerId) => api.get(`/api/admin/flowers/${flowerId}`),
     createFlower: (data) => api.post('/api/admin/flowers', data),
-    updateFlower: (id, data) => api.put(`/api/admin/flowers/${id}`, data),
-    deleteFlower: (id) => api.delete(`/api/admin/flowers/${id}`),
-    updateFlowerStock: (id, stock) => api.patch(`/api/admin/flowers/${id}/stock`, { stock }),
+    updateFlower: (flowerId, data) => api.put(`/api/admin/flowers/${flowerId}`, data),
+    deleteFlower: (flowerId) => api.delete(`/api/admin/flowers/${flowerId}`),
+    updateFlowerStock: (flowerId, stock) => api.patch(`/api/admin/flowers/${flowerId}/stock`, { stock }),
 
     // Order management
     getOrders: (filters = {}) => api.get('/api/admin/orders', { params: filters }),
@@ -150,3 +156,11 @@ export const staffAPI = {
 };
 
 export default api;
+
+// Payment API
+export const paymentAPI = {
+    // Tạo thanh toán VNPAY: trả về URL để redirect
+    create: (amount) => api.post('/payment/create', { amount }),
+    // Xác minh thanh toán từ VNPAY callback
+    verify: (params) => api.get('/payment/verify', { params })
+};

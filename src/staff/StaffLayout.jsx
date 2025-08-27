@@ -24,8 +24,8 @@ const StaffLayout = ({ children }) => {
         const userData = JSON.parse(localStorage.getItem('user') || '{}');
         setUser(userData);
 
-        // Redirect if not staff
-        if (userData.role !== 'staff') {
+        // Redirect if not staff (check both cases)
+        if (userData.role !== 'STAFF' && userData.role !== 'staff') {
             navigate('/login');
         }
     }, [navigate]);

@@ -12,14 +12,15 @@ const PackageCard = ({ package: packageData, onSelect }) => {
     // Handle missing data gracefully
     const safePackage = {
         id: packageData.id || Math.random(),
+        packageId: packageData.packageId || packageData.id,
         name: packageData.name || 'Gói không tên',
         description: packageData.description || 'Mô tả không có sẵn',
         price: packageData.price || 0,
         originalPrice: packageData.originalPrice || packageData.price || 0,
         image: packageData.image || 'https://images.unsplash.com/photo-1490750967868-88aa4486c946?w=400&h=300&fit=crop',
-        features: packageData.features || ['Chi tiết không có sẵn'],
         popular: packageData.popular || false,
-        category: packageData.category || 'basic'
+        category: packageData.category || 'basic',
+        durationMonths: packageData.durationMonths || packageData.duration || 1
     };
 
     return (
@@ -68,20 +69,8 @@ const PackageCard = ({ package: packageData, onSelect }) => {
                             </span>
                         )}
                     </div>
-                    <p className="text-sm text-gray-500 mt-1">mỗi tuần</p>
+                    <p className="text-sm text-gray-500 mt-1">{safePackage.durationMonths} tháng</p>
                 </div>
-            </div>
-
-            {/* Features */}
-            <div className="mb-6">
-                <ul className="space-y-3">
-                    {safePackage.features.map((feature, index) => (
-                        <li key={index} className="flex items-start">
-                            <Check size={18} className="text-secondary-500 mr-3 mt-0.5 flex-shrink-0" />
-                            <span className="text-gray-700">{feature}</span>
-                        </li>
-                    ))}
-                </ul>
             </div>
 
             {/* Action Button */}

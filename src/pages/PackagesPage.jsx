@@ -57,9 +57,8 @@ const PackagesPage = () => {
     });
 
     const handlePackageSelect = (packageData) => {
-        console.log('Selected package:', packageData);
-        // Navigate to subscription page
-        navigate('/subscription');
+        const id = packageData.packageId || packageData.id;
+        navigate(`/subscription?packageId=${id}`);
     };
 
     return (
@@ -171,85 +170,6 @@ const PackagesPage = () => {
                         </p>
                     </div>
                 )}
-            </div>
-
-            {/* Delivery Options */}
-            <div className="bg-white py-20">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="text-center mb-16">
-                        <h2 className="text-3xl lg:text-4xl font-bold text-gray-900 mb-4">
-                            Tùy chọn giao hàng
-                        </h2>
-                        <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-                            Chọn số lần giao hàng trong tuần phù hợp với lịch trình của bạn.
-                        </p>
-                    </div>
-
-                    <div className="grid md:grid-cols-3 gap-8">
-                        {deliveryOptions.map((option) => (
-                            <div key={option.id} className="card text-center hover:shadow-lg transition-shadow">
-                                <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                                    {option.name}
-                                </h3>
-                                <p className="text-gray-600 mb-4">
-                                    {option.description}
-                                </p>
-                                <div className="text-2xl font-bold text-primary-600 mb-4">
-                                    {option.price === 0 ? 'Miễn phí' : `+${option.price.toLocaleString('vi-VN')}đ`}
-                                </div>
-                                <button className="btn-primary w-full">
-                                    Chọn tùy chọn này
-                                </button>
-                            </div>
-                        ))}
-                    </div>
-                </div>
-            </div>
-
-            {/* FAQ Section */}
-            <div className="bg-gray-50 py-20">
-                <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="text-center mb-16">
-                        <h2 className="text-3xl lg:text-4xl font-bold text-gray-900 mb-4">
-                            Câu hỏi thường gặp
-                        </h2>
-                        <p className="text-xl text-gray-600">
-                            Tìm hiểu thêm về dịch vụ của chúng tôi.
-                        </p>
-                    </div>
-
-                    <div className="space-y-6">
-                        <div className="card">
-                            <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                                Tôi có thể hủy gói đăng ký bất cứ lúc nào không?
-                            </h3>
-                            <p className="text-gray-600">
-                                Có, bạn có thể hủy gói đăng ký bất cứ lúc nào mà không phải chịu phí phạt.
-                                Chỉ cần thông báo cho chúng tôi trước 24 giờ.
-                            </p>
-                        </div>
-
-                        <div className="card">
-                            <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                                Hoa có tươi không và được bảo quản như thế nào?
-                            </h3>
-                            <p className="text-gray-600">
-                                Chúng tôi cam kết 100% hoa tươi. Hoa được bảo quản trong điều kiện
-                                nhiệt độ và độ ẩm tối ưu, đảm bảo tươi mới khi giao đến tay bạn.
-                            </p>
-                        </div>
-
-                        <div className="card">
-                            <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                                Tôi có thể thay đổi địa chỉ giao hàng không?
-                            </h3>
-                            <p className="text-gray-600">
-                                Có, bạn có thể thay đổi địa chỉ giao hàng bất cứ lúc nào trong
-                                tài khoản của mình hoặc liên hệ với chúng tôi.
-                            </p>
-                        </div>
-                    </div>
-                </div>
             </div>
 
 

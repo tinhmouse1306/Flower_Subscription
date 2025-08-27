@@ -58,33 +58,6 @@ const Footer = () => {
                         </ul>
                     </div>
 
-                    {/* Services */}
-                    <div>
-                        <h3 className="text-lg font-semibold mb-4">Dịch vụ</h3>
-                        <ul className="space-y-2">
-                            <li>
-                                <Link to="/packages" className="text-gray-400 hover:text-white transition-colors">
-                                    Gói cơ bản
-                                </Link>
-                            </li>
-                            <li>
-                                <Link to="/packages" className="text-gray-400 hover:text-white transition-colors">
-                                    Gói premium
-                                </Link>
-                            </li>
-                            <li>
-                                <Link to="/packages" className="text-gray-400 hover:text-white transition-colors">
-                                    Gói tiết kiệm
-                                </Link>
-                            </li>
-                            <li>
-                                <Link to="/delivery" className="text-gray-400 hover:text-white transition-colors">
-                                    Tùy chọn giao hàng
-                                </Link>
-                            </li>
-                        </ul>
-                    </div>
-
                     {/* Contact Info */}
                     <div>
                         <h3 className="text-lg font-semibold mb-4">Liên hệ</h3>

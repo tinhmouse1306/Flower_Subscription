@@ -1,12 +1,10 @@
 // Firebase configuration
 export const firebaseConfig = {
-    apiKey: "AIzaSyCf6pp9cLr1MBW2PPF7p4cY7pa9aFG-q1o",
-    authDomain: "flower-subscription-7c9aa.firebaseapp.com",
-    projectId: "flower-subscription-7c9aa",
-    storageBucket: "flower-subscription-7c9aa.firebasestorage.app",
-    messagingSenderId: "622147275176",
-    appId: "1:622147275176:web:9bcfa2ba8a3835883af59d",
-    measurementId: "G-KZJWRLGR0R"
+    apiKey: "AIzaSyB6tfpyYPiv3xfmg72cJ4LzHtABlD-YjL4",
+    authDomain: "flowerssubscriptionservice.firebaseapp.com",
+    projectId: "flowerssubscriptionservice",
+    storageBucket: "flowerssubscriptionservice.firebasestorage.app",
+    messagingSenderId: "262991343026"
 };
 
 // Initialize Firebase if not already initialized

@@ -28,9 +28,8 @@ import AdminReports from './admin/Reports';
 // Staff pages
 import StaffDashboard from './staff/Dashboard';
 import StaffOrders from './staff/Orders';
-import StaffDeliveries from './staff/Deliveries';
 import StaffCustomers from './staff/Customers';
-import StaffReports from './staff/Reports';
+
 
 import './App.css';
 
@@ -96,21 +95,13 @@ function App() {
             <StaffOrders />
           </ProtectedRoute>
         } />
-        <Route path="/staff/deliveries" element={
-          <ProtectedRoute>
-            <StaffDeliveries />
-          </ProtectedRoute>
-        } />
+       
         <Route path="/staff/customers" element={
           <ProtectedRoute>
             <StaffCustomers />
           </ProtectedRoute>
         } />
-        <Route path="/staff/reports" element={
-          <ProtectedRoute>
-            <StaffReports />
-          </ProtectedRoute>
-        } />
+        
 
         {/* Public routes with Header/Footer */}
         <Route path="/" element={

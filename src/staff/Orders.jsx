@@ -1,25 +1,18 @@
+// src/staff/Orders.jsx
 import { useState, useEffect, useMemo } from 'react';
 import StaffLayout from './StaffLayout';
-import { staffAPI } from '../utils/api';
-import {
-  Search,
-  Filter,
-  Eye,
-  Phone,
-  MapPin,
-  Calendar,
-  Clock
-} from 'lucide-react';
+import { subscriptionAPI } from '../utils/api';
+import { Search, Filter, Eye, Phone, Calendar } from 'lucide-react';
 
+// map status về UI
 const mapStatus = (s) => {
   const v = String(s || '').toLowerCase();
-  if (['pending', 'awaiting'].includes(v)) return 'pending';
-  if (['confirmed'].includes(v)) return 'confirmed';
-  if (['processing', 'preparing'].includes(v)) return 'processing';
-  if (['shipping', 'shipped', 'out_for_delivery'].includes(v)) return 'shipping';
-  if (['delivered', 'completed', 'done'].includes(v)) return 'delivered';
-  if (['cancelled', 'canceled'].includes(v)) return 'cancelled';
-  return v || 'pending';
+  if (v === 'available') return 'pending';     // hiển thị là 'Chờ xác nhận'
+  if (v === 'pending')   return 'confirmed';   // tuỳ bạn muốn hiển thị thế nào
+  if (v === 'active')    return 'shipping';    // đang giao / đang thực hiện
+  if (v === 'completed') return 'delivered';
+  if (v === 'cancelled') return 'cancelled';
+  return 'pending';
 };
 
 const toDate10 = (x) => {
@@ -32,17 +25,19 @@ const toDate10 = (x) => {
   return /^\d{4}-\d{2}-\d{2}/.test(s) ? s.slice(0, 10) : s;
 };
 
+// chuẩn hoá 1 dòng subscription thành “order” cho UI
 const normalizeOrder = (o) => ({
-  id: o?.id ?? o?.orderId ?? o?.code ?? '-',
-  customer: o?.customer?.name ?? o?.customerName ?? '—',
-  package: o?.packageName ?? o?.subscription?.name ?? '—',
-  amount: Number(o?.amount ?? o?.totalAmount ?? o?.price ?? 0),
+  id: o?.id ?? '-',
+  customer: o?.user?.fullName || o?.user?.name || (o?.userId ? `User #${o.userId}` : '—'),
+  package: o?.subscriptionPackage?.name || o?.package?.name || '—',
+  amount: Number(o?.price ?? 0),
   status: mapStatus(o?.status),
-  date: toDate10(o?.date ?? o?.createdAt),
-  phone: o?.customer?.phone ?? o?.phone ?? '—',
-  address: o?.shippingAddress?.fullAddress ?? o?.shippingAddress ?? o?.address ?? '—',
-  deliveryDate: toDate10(o?.deliveryDate ?? o?.scheduledDate),
-  notes: o?.notes ?? ''
+  // date/createdAt tuỳ BE có trả không
+  date: toDate10(o?.createdAt ?? o?.updatedAt),
+  phone: o?.user?.phone || '—',
+  address: o?.address?.fullAddress || o?.address || '—',
+  deliveryDate: toDate10(o?.deliveryDate),
+  notes: o?.note || '',
 });
 
 const StaffOrders = () => {
@@ -55,13 +50,14 @@ const StaffOrders = () => {
     setLoading(true);
     setError('');
     try {
-      const res = await staffAPI.getOrders(filters);
+      // GỌI ĐÚNG ENDPOINT SUBSCRIPTION
+      const res = await subscriptionAPI.list(filters);
       const raw = res?.data?.items ?? res?.data ?? [];
       const list = Array.isArray(raw) ? raw.map(normalizeOrder) : [];
       setRawOrders(list);
     } catch (e) {
       console.error('Failed to load orders', e);
-      setError('Không tải được danh sách đơn hàng.');
+      setError('Không tải được danh sách đơn hàng (subscriptions).');
       setRawOrders([]);
     } finally {
       setLoading(false);
@@ -75,25 +71,44 @@ const StaffOrders = () => {
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
     if (!q) return rawOrders;
-    return rawOrders.filter(o =>
+    return rawOrders.filter((o) =>
       [o.id, o.customer, o.package, o.phone, o.address]
-        .some(x => String(x || '').toLowerCase().includes(q))
+        .some((x) => String(x || '').toLowerCase().includes(q))
     );
   }, [query, rawOrders]);
 
-  const handleStatusChange = (id, newStatus) => {
-    // cập nhật local ngay để UI phản hồi nhanh
-    setRawOrders(prev => prev.map(o => (o.id === id ? { ...o, status: mapStatus(newStatus) } : o)));
+  // đổi trạng thái local cho dropdown (chỉ đổi hiển thị)
+  const handleStatusChange = (id, newUiStatus) => {
+    setRawOrders((prev) =>
+      prev.map((o) => (o.id === id ? { ...o, status: newUiStatus } : o))
+    );
   };
 
+  // Nút "Cập nhật": logic theo yêu cầu AVAILABLE -> ACTIVE, ACTIVE -> COMPLETED
   const handleUpdateClick = async (order) => {
     try {
       setLoading(true);
-      await staffAPI.updateOrderStatus(order.id, order.status);
-      await fetchOrders(); // reload để đồng bộ với server
+
+      // lấy status hiện tại từ server (chắc ăn)
+      const detail = await subscriptionAPI.getById(order.id);
+      const current = String(detail?.data?.status || '').toUpperCase();
+
+      let target = null;
+      if (current === 'AVAILABLE') target = 'ACTIVE';
+      else if (current === 'ACTIVE') target = 'COMPLETED';
+      else {
+        alert(`Không thể cập nhật: trạng thái hiện tại là ${current}`);
+        setLoading(false);
+        return;
+      }
+
+      await subscriptionAPI.updateStatus(order.id, target);
+      // load lại list để đồng bộ
+      await fetchOrders();
+      alert(`Đã cập nhật subscription #${order.id} -> ${target}`);
     } catch (e) {
-      console.error('Update status failed', e);
-      setError('Cập nhật trạng thái thất bại.');
+      console.error('Update subscription status failed', e);
+      setError('Cập nhật trạng thái subscription thất bại.');
     } finally {
       setLoading(false);
     }
@@ -126,18 +141,18 @@ const StaffOrders = () => {
   return (
     <StaffLayout>
       <div>
-        {/* Page Header */}
+        {/* Header */}
         <div className="mb-8">
           <h1 className="text-2xl font-bold text-gray-900">Quản lý đơn hàng</h1>
-          <p className="text-gray-600">Cập nhật trạng thái và theo dõi đơn hàng</p>
+          <p className="text-gray-600">Cập nhật trạng thái Subscription theo đơn hàng</p>
         </div>
 
-        {/* Actions Bar */}
+        {/* Actions */}
         <div className="bg-white rounded-lg shadow p-6 mb-6">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <div className="flex flex-col sm:flex-row gap-4 flex-1">
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 h-4 w-4" />
                 <input
                   type="text"
                   placeholder="Tìm đơn hàng..."
@@ -146,7 +161,10 @@ const StaffOrders = () => {
                   className="pl-10 pr-4 py-2 border border-gray-300 rounded-md text-sm w-full sm:w-64"
                 />
               </div>
-              <button onClick={() => fetchOrders(query ? { q: query.trim() } : {})} className="btn-secondary">
+              <button
+                onClick={() => fetchOrders(query ? { q: query.trim() } : {})}
+                className="btn-secondary"
+              >
                 <Filter size={16} className="mr-2" />
                 Lọc
               </button>
@@ -154,19 +172,17 @@ const StaffOrders = () => {
           </div>
         </div>
 
-        {/* Loading & Error */}
+        {/* Loading / Error */}
         {loading && <div className="text-sm text-gray-500 mb-4">Đang tải đơn hàng…</div>}
         {!!error && <div className="text-sm text-red-600 mb-4">{error}</div>}
 
-        {/* Orders List */}
+        {/* List */}
         <div className="space-y-4">
           {filtered.map((order) => (
             <div key={order.id} className="bg-white rounded-lg shadow p-6">
               <div className="flex justify-between items-start mb-4">
                 <div>
-                  <h4 className="text-lg font-semibold text-gray-900">
-                    Đơn hàng #{order.id}
-                  </h4>
+                  <h4 className="text-lg font-semibold text-gray-900">Đơn hàng #{order.id}</h4>
                   <p className="text-sm text-gray-600">{order.date}</p>
                 </div>
                 <div className="flex items-center space-x-2">
@@ -214,16 +230,16 @@ const StaffOrders = () => {
                 <div className="flex items-center space-x-4">
                   <div className="flex items-center space-x-2">
                     <Calendar size={16} className="text-gray-400" />
-                    <span className="text-sm text-gray-600">
-                      Ngày giao: {order.deliveryDate}
-                    </span>
+                    <span className="text-sm text-gray-600">Ngày giao: {order.deliveryDate}</span>
                   </div>
                   <button className="flex items-center space-x-2 text-blue-600 hover:text-blue-700">
                     <Phone size={16} />
                     <span className="text-sm">Gọi</span>
                   </button>
                 </div>
+
                 <div className="flex space-x-2">
+                  {/* Dropdown chỉ đổi UI (không bắn trực tiếp lên BE) */}
                   <select
                     value={order.status}
                     onChange={(e) => handleStatusChange(order.id, e.target.value)}
@@ -252,7 +268,7 @@ const StaffOrders = () => {
           )}
         </div>
 
-        {/* Summary Stats */}
+        {/* Summary */}
         <div className="mt-6 grid grid-cols-1 md:grid-cols-4 gap-4">
           <div className="bg-white rounded-lg shadow p-4">
             <div className="text-sm font-medium text-gray-500">Tổng đơn hàng</div>
@@ -261,19 +277,19 @@ const StaffOrders = () => {
           <div className="bg-white rounded-lg shadow p-4">
             <div className="text-sm font-medium text-gray-500">Chờ xác nhận</div>
             <div className="text-2xl font-bold text-yellow-600">
-              {filtered.filter(order => order.status === 'pending').length}
+              {filtered.filter((o) => o.status === 'pending').length}
             </div>
           </div>
           <div className="bg-white rounded-lg shadow p-4">
             <div className="text-sm font-medium text-gray-500">Đang giao</div>
             <div className="text-2xl font-bold text-orange-600">
-              {filtered.filter(order => order.status === 'shipping').length}
+              {filtered.filter((o) => o.status === 'shipping').length}
             </div>
           </div>
           <div className="bg-white rounded-lg shadow p-4">
             <div className="text-sm font-medium text-gray-500">Đã giao</div>
             <div className="text-2xl font-bold text-green-600">
-              {filtered.filter(order => order.status === 'delivered').length}
+              {filtered.filter((o) => o.status === 'delivered').length}
             </div>
           </div>
         </div>

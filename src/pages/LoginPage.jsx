@@ -4,7 +4,7 @@ import { Eye, EyeOff, Mail, Lock, User, ArrowRight } from 'lucide-react';
 import { authAPI } from '../utils/api';
 import { setAuthData, isAuthenticated, getToken } from '../utils/auth';
 
-import { initializeFirebase, getFirebaseAuth, getGoogleProvider } from '../utils/firebase';
+import { initializeFirebase, getFirebaseAuth, getGoogleProvider } from '../utils/firebaseAuth';
 import Swal from 'sweetalert2';
 
 

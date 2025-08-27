@@ -1,41 +1,28 @@
-// Firebase configuration
-export const firebaseConfig = {
+// Import the functions you need from the SDKs you need
+import { initializeApp } from "firebase/app";
+import { getAuth, GoogleAuthProvider } from "firebase/auth";
+import { getStorage } from "firebase/storage";
+
+// Unified Firebase config (Auth + Storage)
+const firebaseConfig = {
     apiKey: "AIzaSyB6tfpyYPiv3xfmg72cJ4LzHtABlD-YjL4",
     authDomain: "flowerssubscriptionservice.firebaseapp.com",
     projectId: "flowerssubscriptionservice",
-    storageBucket: "flowerssubscriptionservice.firebasestorage.app",
-    messagingSenderId: "262991343026"
+    // Use the canonical bucket host for SDK; map to gs:// below explicitly
+    storageBucket: "flowerssubscriptionservice.appspot.com",
+    messagingSenderId: "262991343026",
+    appId: "1:262991343026:web:5a28997955a6e6525108ab",
 };
 
-// Initialize Firebase if not already initialized
-export const initializeFirebase = () => {
-    if (typeof window !== 'undefined' && window.firebase && !window.firebase.apps.length) {
-        try {
-            // Disable Firebase Hosting init.json request
-            window.__FIREBASE_DEFAULTS__ = {
-                config: firebaseConfig
-            };
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
 
-            window.firebase.initializeApp(firebaseConfig);
-            console.log('Firebase initialized successfully');
-        } catch (error) {
-            console.log('Firebase already initialized or error:', error.message);
-        }
-    }
-};
+// Initialize Cloud Storage and get a reference to the service
+// Auth
+export const auth = getAuth(app);
+export const googleProvider = new GoogleAuthProvider();
 
-// Get Firebase Auth instance
-export const getFirebaseAuth = () => {
-    if (typeof window !== 'undefined' && window.firebase) {
-        return window.firebase.auth();
-    }
-    return null;
-};
+// Storage (bind explicitly to gs:// bucket)
+export const storage = getStorage(app, 'gs://flowerssubscriptionservice.appspot.com');
 
-// Google Auth Provider
-export const getGoogleProvider = () => {
-    if (typeof window !== 'undefined' && window.firebase) {
-        return new window.firebase.auth.GoogleAuthProvider();
-    }
-    return null;
-};
+export default app;

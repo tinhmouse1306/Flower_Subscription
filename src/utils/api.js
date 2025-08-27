@@ -119,6 +119,13 @@ export const adminAPI = {
     deleteFlower: (flowerId) => api.delete(`/api/admin/flowers/${flowerId}`),
     updateFlowerStock: (flowerId, stock) => api.patch(`/api/admin/flowers/${flowerId}/stock`, { stock }),
 
+    // Bouquet management
+    getBouquets: () => api.get('/api/admin/bouquets'),
+    getBouquetDetail: (id) => api.get(`/api/admin/bouquets/${id}`),
+    createBouquet: (data) => api.post('/api/admin/bouquets', data),
+    updateBouquet: (id, data) => api.put(`/api/admin/bouquets/${id}`, data),
+    deleteBouquet: (id) => api.delete(`/api/admin/bouquets/${id}`),
+
     // Order management
     getOrders: (filters = {}) => api.get('/api/admin/orders', { params: filters }),
     getOrderDetails: (id) => api.get(`/api/admin/orders/${id}`),

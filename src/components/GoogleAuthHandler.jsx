@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getFirebaseAuth } from '../utils/firebase';
+import { getFirebaseAuth } from '../utils/firebaseAuth';
 import { authAPI } from '../utils/api';
 import { setAuthData } from '../utils/auth';
 import Swal from 'sweetalert2';

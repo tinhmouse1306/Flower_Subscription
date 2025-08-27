@@ -71,9 +71,7 @@ const Header = () => {
                         <Link to="/packages" className="text-gray-700 hover:text-primary-600 font-medium transition-colors">
                             Gói hoa
                         </Link>
-                        <Link to="/flower-selection" className="text-gray-700 hover:text-primary-600 font-medium transition-colors">
-                            Chọn hoa
-                        </Link>
+
 
                         <Link to="/about" className="text-gray-700 hover:text-primary-600 font-medium transition-colors">
                             Về chúng tôi
@@ -193,13 +191,7 @@ const Header = () => {
                             >
                                 Gói hoa
                             </Link>
-                            <Link
-                                to="/flower-selection"
-                                className="text-gray-700 hover:text-primary-600 font-medium transition-colors"
-                                onClick={() => setIsMenuOpen(false)}
-                            >
-                                Chọn hoa
-                            </Link>
+
 
                             <Link
                                 to="/about"

@@ -27,6 +27,10 @@ import AdminReports from './admin/Reports';
 import AddFlower from './admin/AddFlower';
 import ViewFlower from './admin/ViewFlower';
 import EditFlower from './admin/EditFlower';
+import Bouquets from './admin/Bouquets';
+import AddBouquet from './admin/AddBouquet';
+import ViewBouquet from './admin/ViewBouquet';
+import EditBouquet from './admin/EditBouquet';
 
 // Staff pages
 import StaffDashboard from './staff/Dashboard';
@@ -90,6 +94,26 @@ function App() {
         <Route path="/admin/flowers/edit/:id" element={
           <ProtectedRoute>
             <EditFlower />
+          </ProtectedRoute>
+        } />
+        <Route path="/admin/bouquets" element={
+          <ProtectedRoute>
+            <Bouquets />
+          </ProtectedRoute>
+        } />
+        <Route path="/admin/bouquets/add" element={
+          <ProtectedRoute>
+            <AddBouquet />
+          </ProtectedRoute>
+        } />
+        <Route path="/admin/bouquets/:id" element={
+          <ProtectedRoute>
+            <ViewBouquet />
+          </ProtectedRoute>
+        } />
+        <Route path="/admin/bouquets/:id/edit" element={
+          <ProtectedRoute>
+            <EditBouquet />
           </ProtectedRoute>
         } />
         <Route path="/admin/customers" element={

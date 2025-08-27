@@ -116,7 +116,7 @@ const AddFlower = () => {
 
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                                        Danh mục
+                                        Màu sắc
                                     </label>
                                     <select
                                         name="category"
@@ -124,7 +124,7 @@ const AddFlower = () => {
                                         onChange={handleInputChange}
                                         className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
                                     >
-                                        <option value="">Chọn danh mục</option>
+                                        <option value="">Chọn màu sắc</option>
                                         <option value="Hoa hồng">Hoa hồng</option>
                                         <option value="Hoa cúc">Hoa cúc</option>
                                         <option value="Hoa lan">Hoa lan</option>

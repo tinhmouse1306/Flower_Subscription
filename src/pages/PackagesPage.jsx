@@ -3,7 +3,9 @@ import { useNavigate } from 'react-router-dom';
 import PackageCard from '../components/PackageCard';
 import { deliveryOptions } from '../data/mockData';
 import { subscriptionAPI } from '../utils/api';
+import { isAuthenticated } from '../utils/auth';
 import { Filter, Search, Star, Loader2 } from 'lucide-react';
+import Swal from 'sweetalert2';
 
 
 const PackagesPage = () => {
@@ -57,6 +59,26 @@ const PackagesPage = () => {
     });
 
     const handlePackageSelect = (packageData) => {
+        // Kiểm tra xem user đã đăng nhập chưa
+        if (!isAuthenticated()) {
+            // Hiển thị thông báo đẹp và chuyển hướng đến trang login
+            Swal.fire({
+                title: 'Cần đăng nhập!',
+                text: 'Vui lòng đăng nhập để chọn gói hoa!',
+                icon: 'info',
+                confirmButtonText: 'Đăng nhập ngay',
+                confirmButtonColor: '#8B5CF6',
+                showCancelButton: true,
+                cancelButtonText: 'Hủy',
+                cancelButtonColor: '#6B7280'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    navigate('/login');
+                }
+            });
+            return;
+        }
+
         const id = packageData.packageId || packageData.id;
         navigate(`/subscription?packageId=${id}`);
     };
@@ -151,7 +173,7 @@ const PackagesPage = () => {
                     <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
                         {filteredPackages.map((packageData) => (
                             <PackageCard
-                                key={packageData.id}
+                                key={packageData.packageId || packageData.id || Math.random()}
                                 package={packageData}
                                 onSelect={handlePackageSelect}
                             />

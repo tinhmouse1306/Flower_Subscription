@@ -7,10 +7,8 @@ import {
     Home,
     Package,
     Flower,
-    ShoppingCart,
     Users,
     BarChart3,
-    Settings,
     Bell,
     User,
     Leaf
@@ -53,10 +51,8 @@ const AdminLayout = ({ children }) => {
         { name: 'Gói đăng ký', href: '/admin/packages', icon: Package },
         { name: 'Loại hoa', href: '/admin/flowers', icon: Flower },
         { name: 'Bouquet', href: '/admin/bouquets', icon: Leaf },
-        { name: 'Đơn hàng', href: '/admin/orders', icon: ShoppingCart },
         { name: 'Khách hàng', href: '/admin/customers', icon: Users },
         { name: 'Báo cáo', href: '/admin/reports', icon: BarChart3 },
-        { name: 'Cài đặt', href: '/admin/settings', icon: Settings },
     ];
 
     return (

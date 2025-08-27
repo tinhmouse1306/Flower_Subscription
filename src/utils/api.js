@@ -107,6 +107,21 @@ export const userAPI = {
 
     // Get my info
     getMyInfo: () => api.get('/api/myInfo'),
+
+    // Get all users (admin only)
+    getUsers: () => api.get('/api/getUsers'),
+
+    // Get user by ID (admin only)
+    getUser: (userId) => api.get(`/api/${userId}`),
+
+    // Update user (admin only)
+    updateUser: (userId, data) => api.put(`/api/updateUser/${userId}`, data),
+
+    // Delete user (admin only)
+    deleteUser: (userId) => api.delete(`/api/deleteUser/${userId}`),
+
+    // Set user role (admin only)
+    setUserRole: (userId, role) => api.put(`/api/setRole/${userId}?role=${role}`),
 };
 
 export const subscriptionAPI = {
@@ -116,8 +131,8 @@ export const subscriptionAPI = {
     // Get package detail (public API - no auth required)
     getPackageDetail: (id) => api.get(`/api/packages/${id}`, { skipAuth: true }),
 
-    // Get flowers (public API - no auth required)
-    getFlowers: () => api.get('/api/flowers', { skipAuth: true }),
+    // Get flowers (requires authentication)
+    getFlowers: () => api.get('/api/flowers'),
 
     // Get bouquets (public for Google users, authenticated for regular users)
     getBouquets: () => {
@@ -169,8 +184,8 @@ export const adminAPI = {
     deletePackage: (id) => api.delete(`/api/admin/packages/${id}`),
     updatePackageStatus: (id, status) => api.patch(`/api/admin/packages/${id}/status`, { status }),
 
-    // Flower management
-    getFlowers: () => api.get('/api/admin/flowers'),
+    // Flower management - requires authentication
+    getFlowers: () => api.get('/api/flowers'),
     getFlowerDetail: (flowerId) => api.get(`/api/admin/flowers/${flowerId}`),
     createFlower: (data) => api.post('/api/admin/flowers', data),
     updateFlower: (flowerId, data) => api.put(`/api/admin/flowers/${flowerId}`, data),

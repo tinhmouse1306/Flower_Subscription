@@ -1,10 +1,11 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Eye, EyeOff, Mail, Lock, User, ArrowRight } from 'lucide-react';
 import { authAPI } from '../utils/api';
 import { setAuthData, isAuthenticated, getToken } from '../utils/auth';
 
-import { initializeFirebase, getFirebaseAuth, getGoogleProvider } from '../utils/firebase';
+import { auth, googleProvider, testFirebaseAuth } from '../utils/firebase';
+import { signInWithPopup } from 'firebase/auth';
 import Swal from 'sweetalert2';
 
 
@@ -15,6 +16,8 @@ const LoginPage = () => {
     });
     const [showPassword, setShowPassword] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
+
+
 
     // Function để decode JWT token
     const decodeToken = (token) => {
@@ -113,14 +116,16 @@ const LoginPage = () => {
                     authenticated: true,
                     role: decodedToken.payload.scope,
                     userId: decodedToken.payload.sub,
-                    // Thử lấy fullName từ nhiều nguồn khác nhau
-                    fullName: data.result.fullName ||
+                    // Lấy fullName từ data.result.result.fullName (nested structure)
+                    fullName: data.result.result?.fullName ||
+                        data.result.fullName ||
                         data.result.email ||
                         decodedToken.payload.fullName ||
                         decodedToken.payload.name ||
                         decodedToken.payload.email ||
                         formData.userName,
-                    email: data.result.email ||
+                    email: data.result.result?.email ||
+                        data.result.email ||
                         decodedToken.payload.email,
                     issuedAt: decodedToken.payload.iat,
                     expiresAt: decodedToken.payload.exp
@@ -198,28 +203,72 @@ const LoginPage = () => {
     const handleGoogleLogin = async () => {
         try {
             setIsLoading(true);
+            console.log('🚀 Starting Google login...');
 
-            // Initialize Firebase
-            initializeFirebase();
-            const auth = getFirebaseAuth();
-            const provider = getGoogleProvider();
+            // Popup-based Google Sign-In
+            const result = await signInWithPopup(auth, googleProvider);
+            console.log('✅ Google login successful:', result.user);
 
-            if (!auth || !provider) {
-                throw new Error('Firebase Auth not available');
+            if (result.user) {
+                const user = result.user;
+                const email = user.email;
+                const name = user.displayName || email;
+                const uid = user.uid;
+                const idToken = await user.getIdToken();
+
+                console.log('📝 User info:', { email, name, uid });
+                console.log('🔑 ID Token received');
+
+                // Show success message
+                await Swal.fire({
+                    icon: 'success',
+                    title: 'Đăng nhập Google thành công!',
+                    text: `Chào mừng ${name}!`,
+                    showConfirmButton: false,
+                    timer: 2000,
+                    timerProgressBar: true,
+                    background: '#f8fafc',
+                    color: '#1f2937',
+                    customClass: {
+                        popup: 'rounded-lg shadow-xl',
+                        title: 'text-xl font-bold text-gray-900',
+                        content: 'text-gray-600'
+                    }
+                });
+
+                // Save to localStorage
+                const userData = {
+                    email: email,
+                    name: name,
+                    uid: uid,
+                    authenticated: true,
+                    isGoogleUser: true,
+                    token: idToken,
+                    role: 'USER' // Add default role for Google users
+                };
+
+                console.log('💾 Saving user data:', userData);
+                setAuthData(idToken, userData);
+
+                console.log('✅ User data saved successfully');
+                console.log('🔄 Redirecting to homepage...');
+
+                // Redirect to homepage
+                window.location.href = '/';
             }
 
-            // Configure Google provider
-            provider.addScope('email');
-            provider.addScope('profile');
-
-            await auth.signInWithRedirect(provider);
-            // User will be redirected to Google, then back to /google-auth
-
         } catch (error) {
+            console.error('❌ Google login error:', error);
+
+            if (error.code === 'auth/popup-closed-by-user') {
+                console.log('👤 User closed popup');
+                return;
+            }
+
             Swal.fire({
                 icon: 'error',
                 title: 'Lỗi đăng nhập Google',
-                text: 'Không thể đăng nhập với Google. Vui lòng thử lại.',
+                text: error.message || 'Không thể đăng nhập với Google. Vui lòng thử lại.',
                 confirmButtonText: 'Thử lại',
                 background: '#f8fafc',
                 color: '#1f2937',

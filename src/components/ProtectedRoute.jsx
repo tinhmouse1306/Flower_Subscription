@@ -28,8 +28,31 @@ const ProtectedRoute = ({ children }) => {
             console.log('ProtectedRoute: Token:', token ? 'Present' : 'Missing');
             console.log('ProtectedRoute: Role:', currentRole);
 
-            if (!authenticated || !token) {
-                console.log('ProtectedRoute: No auth or token, clearing storage and redirecting to login');
+            // Check if user is Google user
+            let isGoogleUser = false;
+            try {
+                const userData = localStorage.getItem('userData');
+                if (userData) {
+                    const parsed = JSON.parse(userData);
+                    isGoogleUser = parsed.isGoogleUser || false;
+                }
+            } catch (error) {
+                console.error('ProtectedRoute: Error parsing userData:', error);
+            }
+
+            console.log('ProtectedRoute: Is Google User:', isGoogleUser);
+
+            // For Google users, only check authenticated status, not token
+            if (!authenticated) {
+                console.log('ProtectedRoute: Not authenticated, clearing storage and redirecting to login');
+                localStorage.clear();
+                navigate('/login');
+                return;
+            }
+
+            // For non-Google users, check token
+            if (!isGoogleUser && !token) {
+                console.log('ProtectedRoute: No token for non-Google user, clearing storage and redirecting to login');
                 localStorage.clear();
                 navigate('/login');
                 return;

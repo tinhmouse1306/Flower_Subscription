@@ -7,12 +7,11 @@ import {
     Home,
     Package,
     Flower,
-    ShoppingCart,
     Users,
     BarChart3,
-    Settings,
     Bell,
-    User
+    User,
+    Leaf
 } from 'lucide-react';
 import { logout } from '../utils/auth';
 
@@ -51,10 +50,9 @@ const AdminLayout = ({ children }) => {
         { name: 'Tổng quan', href: '/admin', icon: Home },
         { name: 'Gói đăng ký', href: '/admin/packages', icon: Package },
         { name: 'Loại hoa', href: '/admin/flowers', icon: Flower },
-        { name: 'Đơn hàng', href: '/admin/orders', icon: ShoppingCart },
-        { name: 'Khách hàng', href: '/admin/customers', icon: Users },
+        { name: 'Bouquet', href: '/admin/bouquets', icon: Leaf },
+        { name: 'Tài khoản', href: '/admin/customers', icon: Users },
         { name: 'Báo cáo', href: '/admin/reports', icon: BarChart3 },
-        { name: 'Cài đặt', href: '/admin/settings', icon: Settings },
     ];
 
     return (

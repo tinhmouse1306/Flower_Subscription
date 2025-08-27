@@ -3,16 +3,16 @@ import HomePage from './pages/HomePage';
 import PackagesPage from './pages/PackagesPage';
 import FlowerSelectionPage from './pages/FlowerSelectionPage';
 import SubscriptionPage from './pages/SubscriptionPage';
+import MySubscriptionsPage from './pages/MySubscriptionsPage';
+import SubscriptionDetailPage from './pages/SubscriptionDetailPage';
+import ProfilePage from './pages/ProfilePage';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import ForgotPasswordPage from './pages/ForgotPasswordPage';
-import CartPage from './pages/CartPage';
 import PaymentSuccessPage from './pages/PaymentSuccessPage';
 import ProtectedRoute from './components/ProtectedRoute';
 import Header from './components/Header';
 import Footer from './components/Footer';
-import GoogleAuthHandler from './components/GoogleAuthHandler';
-
 
 // Admin pages
 import AdminDashboard from './admin/Dashboard';
@@ -24,6 +24,13 @@ import AdminOrders from './admin/Orders';
 import AdminFlowers from './admin/Flowers';
 import AdminCustomers from './admin/Customers';
 import AdminReports from './admin/Reports';
+import AddFlower from './admin/AddFlower';
+import ViewFlower from './admin/ViewFlower';
+import EditFlower from './admin/EditFlower';
+import Bouquets from './admin/Bouquets';
+import AddBouquet from './admin/AddBouquet';
+import ViewBouquet from './admin/ViewBouquet';
+import EditBouquet from './admin/EditBouquet';
 
 // Staff pages
 import StaffDashboard from './staff/Dashboard';
@@ -71,6 +78,41 @@ function App() {
         <Route path="/admin/flowers" element={
           <ProtectedRoute>
             <AdminFlowers />
+          </ProtectedRoute>
+        } />
+        <Route path="/admin/flowers/add" element={
+          <ProtectedRoute>
+            <AddFlower />
+          </ProtectedRoute>
+        } />
+        <Route path="/admin/flowers/view/:id" element={
+          <ProtectedRoute>
+            <ViewFlower />
+          </ProtectedRoute>
+        } />
+        <Route path="/admin/flowers/edit/:id" element={
+          <ProtectedRoute>
+            <EditFlower />
+          </ProtectedRoute>
+        } />
+        <Route path="/admin/bouquets" element={
+          <ProtectedRoute>
+            <Bouquets />
+          </ProtectedRoute>
+        } />
+        <Route path="/admin/bouquets/add" element={
+          <ProtectedRoute>
+            <AddBouquet />
+          </ProtectedRoute>
+        } />
+        <Route path="/admin/bouquets/:id" element={
+          <ProtectedRoute>
+            <ViewBouquet />
+          </ProtectedRoute>
+        } />
+        <Route path="/admin/bouquets/:id/edit" element={
+          <ProtectedRoute>
+            <EditBouquet />
           </ProtectedRoute>
         } />
         <Route path="/admin/customers" element={
@@ -132,6 +174,33 @@ function App() {
             <Footer />
           </>
         } />
+        <Route path="/my-subscriptions" element={
+          <>
+            <Header />
+            <ProtectedRoute>
+              <MySubscriptionsPage />
+            </ProtectedRoute>
+            <Footer />
+          </>
+        } />
+        <Route path="/subscription-detail/:id" element={
+          <>
+            <Header />
+            <ProtectedRoute>
+              <SubscriptionDetailPage />
+            </ProtectedRoute>
+            <Footer />
+          </>
+        } />
+        <Route path="/profile" element={
+          <>
+            <Header />
+            <ProtectedRoute>
+              <ProfilePage />
+            </ProtectedRoute>
+            <Footer />
+          </>
+        } />
         <Route path="/login" element={
           <>
             <Header />
@@ -153,16 +222,8 @@ function App() {
             <Footer />
           </>
         } />
-        <Route path="/google-auth" element={<GoogleAuthHandler />} />
-        <Route path="/cart" element={
-          <>
-            <Header />
-            <ProtectedRoute>
-              <CartPage />
-            </ProtectedRoute>
-            <Footer />
-          </>
-        } />
+
+
         <Route path="/payment-success" element={
           <>
             <Header />
@@ -172,25 +233,6 @@ function App() {
             <Footer />
           </>
         } />
-        <Route path="/about" element={
-          <>
-            <Header />
-            <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-              <h1 className="text-4xl font-bold text-gray-800">About Us Page</h1>
-            </div>
-            <Footer />
-          </>
-        } />
-        <Route path="/contact" element={
-          <>
-            <Header />
-            <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-              <h1 className="text-4xl font-bold text-gray-800">Contact Page</h1>
-            </div>
-            <Footer />
-          </>
-        } />
-
       </Routes>
     </BrowserRouter>
   );

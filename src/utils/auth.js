@@ -10,12 +10,26 @@ export const isAuthenticated = () => {
 };
 
 export const getToken = () => {
-    return localStorage.getItem('accessToken') || localStorage.getItem('token');
+    const accessToken = localStorage.getItem('accessToken');
+    const token = localStorage.getItem('token');
+
+    console.log('🔍 getToken() - accessToken exists:', !!accessToken);
+    console.log('🔍 getToken() - token exists:', !!token);
+    console.log('🔍 getToken() - accessToken preview:', accessToken ? accessToken.substring(0, 50) + '...' : 'null');
+    console.log('🔍 getToken() - token preview:', token ? token.substring(0, 50) + '...' : 'null');
+
+    return accessToken || token;
 };
 
 export const getUser = () => {
     const user = localStorage.getItem('userData') || localStorage.getItem('user');
     return user ? JSON.parse(user) : null;
+};
+
+export const getUserId = () => {
+    const user = getUser();
+    // Hỗ trợ cả regular users (userId/id) và Google users (uid)
+    return user?.userId || user?.id || user?.uid || null;
 };
 
 export const logout = () => {
@@ -88,6 +102,8 @@ export const setAuthData = (token, userData) => {
         console.error('Error details:', error.message);
     }
 };
+
+
 
 // API call with authentication
 export const apiCall = async (url, options = {}) => {

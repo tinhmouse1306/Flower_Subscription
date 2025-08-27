@@ -33,7 +33,7 @@ const Footer = () => {
 
                     {/* Quick Links */}
                     <div>
-                        <h3 className="text-lg font-semibold mb-4">Liên kết nhanh</h3>
+                        <h3 className="text-lg font-semibold mb-4">Thông tin</h3>
                         <ul className="space-y-2">
                             <li>
                                 <Link to="/" className="text-gray-400 hover:text-white transition-colors">
@@ -43,43 +43,6 @@ const Footer = () => {
                             <li>
                                 <Link to="/packages" className="text-gray-400 hover:text-white transition-colors">
                                     Gói hoa
-                                </Link>
-                            </li>
-                            <li>
-                                <Link to="/about" className="text-gray-400 hover:text-white transition-colors">
-                                    Về chúng tôi
-                                </Link>
-                            </li>
-                            <li>
-                                <Link to="/contact" className="text-gray-400 hover:text-white transition-colors">
-                                    Liên hệ
-                                </Link>
-                            </li>
-                        </ul>
-                    </div>
-
-                    {/* Services */}
-                    <div>
-                        <h3 className="text-lg font-semibold mb-4">Dịch vụ</h3>
-                        <ul className="space-y-2">
-                            <li>
-                                <Link to="/packages" className="text-gray-400 hover:text-white transition-colors">
-                                    Gói cơ bản
-                                </Link>
-                            </li>
-                            <li>
-                                <Link to="/packages" className="text-gray-400 hover:text-white transition-colors">
-                                    Gói premium
-                                </Link>
-                            </li>
-                            <li>
-                                <Link to="/packages" className="text-gray-400 hover:text-white transition-colors">
-                                    Gói tiết kiệm
-                                </Link>
-                            </li>
-                            <li>
-                                <Link to="/delivery" className="text-gray-400 hover:text-white transition-colors">
-                                    Tùy chọn giao hàng
                                 </Link>
                             </li>
                         </ul>

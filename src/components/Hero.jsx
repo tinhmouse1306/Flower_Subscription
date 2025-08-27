@@ -37,9 +37,6 @@ const Hero = () => {
                                 Khám phá gói hoa
                                 <ArrowRight size={20} className="ml-2 group-hover:translate-x-1 transition-transform" />
                             </Link>
-                            <button className="border-2 border-gray-300 text-gray-700 hover:border-primary-500 hover:text-primary-600 font-medium py-4 px-8 rounded-lg transition-colors duration-200 text-lg">
-                                Xem demo
-                            </button>
                         </div>
 
                         {/* Features */}
@@ -73,21 +70,6 @@ const Hero = () => {
                                 alt="Beautiful flowers"
                                 className="rounded-2xl shadow-2xl w-full"
                             />
-                        </div>
-
-                        {/* Floating Stats */}
-                        <div className="absolute -top-6 -left-6 bg-white rounded-xl shadow-lg p-4 border border-gray-100">
-                            <div className="text-center">
-                                <div className="text-2xl font-bold text-primary-600">500+</div>
-                                <div className="text-sm text-gray-600">Sinh viên hài lòng</div>
-                            </div>
-                        </div>
-
-                        <div className="absolute -bottom-6 -right-6 bg-white rounded-xl shadow-lg p-4 border border-gray-100">
-                            <div className="text-center">
-                                <div className="text-2xl font-bold text-secondary-600">4.9</div>
-                                <div className="text-sm text-gray-600">⭐ Đánh giá</div>
-                            </div>
                         </div>
                     </div>
                 </div>

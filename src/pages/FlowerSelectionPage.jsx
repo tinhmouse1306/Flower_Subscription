@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { flowerPreferences, seasonalFlowers, colorPreferences, specialOccasions } from '../data/mockData';
+
 import { Filter, Heart, Calendar, Palette, Sun } from 'lucide-react';
 
 const FlowerSelectionPage = () => {
@@ -7,6 +7,106 @@ const FlowerSelectionPage = () => {
     const [selectedSeason, setSelectedSeason] = useState(null);
     const [selectedColor, setSelectedColor] = useState(null);
     const [selectedOccasion, setSelectedOccasion] = useState(null);
+
+    // Dữ liệu flower preferences
+    const flowerPreferences = [
+        {
+            id: 1,
+            name: "Hoa theo mùa",
+            description: "Chọn hoa phù hợp với thời tiết và mùa trong năm",
+            image: "https://images.unsplash.com/photo-1490750967868-88aa4486c946?w=400&h=300&fit=crop"
+        },
+        {
+            id: 2,
+            name: "Hoa theo màu sắc",
+            description: "Chọn hoa dựa trên màu sắc yêu thích của bạn",
+            image: "https://images.unsplash.com/photo-1518709268805-4e9042af2176?w=400&h=300&fit=crop"
+        },
+        {
+            id: 3,
+            name: "Hoa theo dịp lễ",
+            description: "Chọn hoa phù hợp với các dịp lễ và sự kiện đặc biệt",
+            image: "https://images.unsplash.com/photo-1526047932273-341f2a7631f9?w=400&h=300&fit=crop"
+        },
+        {
+            id: 4,
+            name: "Hoa theo tâm trạng",
+            description: "Chọn hoa phù hợp với cảm xúc và tâm trạng hiện tại",
+            image: "https://images.unsplash.com/photo-1490750967868-88aa4486c946?w=400&h=300&fit=crop"
+        }
+    ];
+
+    // Dữ liệu seasonal flowers
+    const seasonalFlowers = [
+        {
+            season: "Mùa xuân",
+            flowers: ["Hoa đào", "Hoa mai", "Hoa cúc", "Hoa hồng"],
+            image: "https://images.unsplash.com/photo-1490750967868-88aa4486c946?w=400&h=300&fit=crop"
+        },
+        {
+            season: "Mùa hè",
+            flowers: ["Hoa sen", "Hoa hướng dương", "Hoa cúc vạn thọ", "Hoa mười giờ"],
+            image: "https://images.unsplash.com/photo-1518709268805-4e9042af2176?w=400&h=300&fit=crop"
+        },
+        {
+            season: "Mùa thu",
+            flowers: ["Hoa cúc", "Hoa hồng", "Hoa cẩm chướng", "Hoa lay ơn"],
+            image: "https://images.unsplash.com/photo-1526047932273-341f2a7631f9?w=400&h=300&fit=crop"
+        },
+        {
+            season: "Mùa đông",
+            flowers: ["Hoa cúc", "Hoa hồng", "Hoa lan", "Hoa cẩm chướng"],
+            image: "https://images.unsplash.com/photo-1490750967868-88aa4486c946?w=400&h=300&fit=crop"
+        }
+    ];
+
+    // Dữ liệu color preferences
+    const colorPreferences = [
+        {
+            color: "Đỏ",
+            flowers: ["Hoa hồng đỏ", "Hoa cẩm chướng đỏ", "Hoa lay ơn đỏ"],
+            image: "https://images.unsplash.com/photo-1518709268805-4e9042af2176?w=400&h=300&fit=crop"
+        },
+        {
+            color: "Hồng",
+            flowers: ["Hoa hồng hồng", "Hoa cẩm chướng hồng", "Hoa lay ơn hồng"],
+            image: "https://images.unsplash.com/photo-1526047932273-341f2a7631f9?w=400&h=300&fit=crop"
+        },
+        {
+            color: "Vàng",
+            flowers: ["Hoa hướng dương", "Hoa cúc vàng", "Hoa lay ơn vàng"],
+            image: "https://images.unsplash.com/photo-1490750967868-88aa4486c946?w=400&h=300&fit=crop"
+        },
+        {
+            color: "Trắng",
+            flowers: ["Hoa hồng trắng", "Hoa cẩm chướng trắng", "Hoa lay ơn trắng"],
+            image: "https://images.unsplash.com/photo-1518709268805-4e9042af2176?w=400&h=300&fit=crop"
+        }
+    ];
+
+    // Dữ liệu special occasions
+    const specialOccasions = [
+        {
+            occasion: "Sinh nhật",
+            flowers: ["Hoa hồng", "Hoa cẩm chướng", "Hoa lay ơn"],
+            image: "https://images.unsplash.com/photo-1526047932273-341f2a7631f9?w=400&h=300&fit=crop"
+        },
+        {
+            occasion: "Valentine",
+            flowers: ["Hoa hồng đỏ", "Hoa cẩm chướng đỏ", "Hoa lay ơn đỏ"],
+            image: "https://images.unsplash.com/photo-1518709268805-4e9042af2176?w=400&h=300&fit=crop"
+        },
+        {
+            occasion: "8/3",
+            flowers: ["Hoa hồng", "Hoa cẩm chướng", "Hoa lay ơn"],
+            image: "https://images.unsplash.com/photo-1490750967868-88aa4486c946?w=400&h=300&fit=crop"
+        },
+        {
+            occasion: "20/11",
+            flowers: ["Hoa cúc", "Hoa hồng", "Hoa cẩm chướng"],
+            image: "https://images.unsplash.com/photo-1518709268805-4e9042af2176?w=400&h=300&fit=crop"
+        }
+    ];
 
     const handlePreferenceSelect = (preference) => {
         setSelectedPreference(preference);

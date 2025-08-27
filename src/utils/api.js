@@ -74,6 +74,12 @@ export const userAPI = {
 
     // Change password
     changePassword: (data) => api.post('/api/user/change-password', data),
+
+    // Get user dashboard info
+    getDashboard: (userId) => api.get(`/api/dashBoard/${userId}`),
+
+    // Get my info
+    getMyInfo: () => api.get('/api/myInfo'),
 };
 
 export const subscriptionAPI = {
@@ -89,8 +95,14 @@ export const subscriptionAPI = {
     // Create subscription
     createSubscription: (data) => api.post('/api/subscriptions', data),
 
-    // Get user subscriptions
-    getUserSubscriptions: () => api.get('/api/subscriptions/user'),
+    // Get all subscriptions (admin)
+    getAllSubscriptions: () => api.get('/api/subscriptions'),
+
+    // Get subscription by ID
+    getSubscriptionById: (id) => api.get(`/api/subscriptions/${id}`),
+
+    // Update subscription status
+    updateSubscriptionStatus: (id, status) => api.put(`/api/subscriptions/${id}/status?status=${status}`),
 };
 
 // Admin API

@@ -18,6 +18,11 @@ export const getUser = () => {
     return user ? JSON.parse(user) : null;
 };
 
+export const getUserId = () => {
+    const user = getUser();
+    return user?.userId || user?.id || null;
+};
+
 export const logout = () => {
     // Clear all possible auth keys
     localStorage.removeItem('token');

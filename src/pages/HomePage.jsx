@@ -2,8 +2,6 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Hero from '../components/Hero';
 import PackageCard from '../components/PackageCard';
-import TestimonialCard from '../components/TestimonialCard';
-import { testimonials } from '../data/mockData';
 import { subscriptionAPI } from '../utils/api';
 import { isAuthenticated } from '../utils/auth';
 import { ArrowRight, Star, Users, Truck, Clock, Loader2 } from 'lucide-react';

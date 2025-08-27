@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import PackageCard from '../components/PackageCard';
-import { deliveryOptions } from '../data/mockData';
 import { subscriptionAPI } from '../utils/api';
 import { isAuthenticated } from '../utils/auth';
 import { Filter, Search, Star, Loader2 } from 'lucide-react';

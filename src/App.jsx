@@ -3,6 +3,7 @@ import HomePage from './pages/HomePage';
 import PackagesPage from './pages/PackagesPage';
 import FlowerSelectionPage from './pages/FlowerSelectionPage';
 import SubscriptionPage from './pages/SubscriptionPage';
+import MySubscriptionsPage from './pages/MySubscriptionsPage';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import ForgotPasswordPage from './pages/ForgotPasswordPage';
@@ -11,8 +12,6 @@ import PaymentSuccessPage from './pages/PaymentSuccessPage';
 import ProtectedRoute from './components/ProtectedRoute';
 import Header from './components/Header';
 import Footer from './components/Footer';
-import GoogleAuthHandler from './components/GoogleAuthHandler';
-
 
 // Admin pages
 import AdminDashboard from './admin/Dashboard';
@@ -183,6 +182,15 @@ function App() {
             <Footer />
           </>
         } />
+        <Route path="/my-subscriptions" element={
+          <>
+            <Header />
+            <ProtectedRoute>
+              <MySubscriptionsPage />
+            </ProtectedRoute>
+            <Footer />
+          </>
+        } />
         <Route path="/login" element={
           <>
             <Header />
@@ -204,7 +212,7 @@ function App() {
             <Footer />
           </>
         } />
-        <Route path="/google-auth" element={<GoogleAuthHandler />} />
+
         <Route path="/cart" element={
           <>
             <Header />

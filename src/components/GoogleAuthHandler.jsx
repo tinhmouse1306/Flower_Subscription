@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getFirebaseAuth } from '../utils/firebaseAuth';
+import { auth } from '../utils/firebase';
+import { getRedirectResult } from 'firebase/auth';
 import { authAPI } from '../utils/api';
 import { setAuthData } from '../utils/auth';
 import Swal from 'sweetalert2';
@@ -13,7 +14,7 @@ const GoogleAuthHandler = () => {
         const handleRedirectResult = async () => {
             console.log('GoogleAuthHandler: Starting redirect result handling...');
             try {
-                const auth = getFirebaseAuth();
+                // auth is already imported from unified firebase config
                 if (!auth) {
                     console.log('Firebase auth not available');
                     setIsLoading(false);
@@ -22,15 +23,23 @@ const GoogleAuthHandler = () => {
                 }
 
                 console.log('Getting redirect result...');
-                const result = await auth.getRedirectResult();
+                console.log('Auth object in handler:', auth);
+                const result = await getRedirectResult(auth);
                 console.log('Redirect result:', result);
+                console.log('Result user:', result?.user);
+                console.log('Result error:', result?.error);
 
                 if (result.user) {
                     console.log('Google login successful:', result.user);
 
                     const idToken = await result.user.getIdToken();
+                    console.log('Got ID token:', idToken);
+
+                    console.log('Calling BE API with token...');
                     const response = await authAPI.googleLogin({ idToken });
+                    console.log('BE API response:', response);
                     const data = response.data;
+                    console.log('BE API data:', data);
 
                     if (data.code === 1010) {
                         await Swal.fire({

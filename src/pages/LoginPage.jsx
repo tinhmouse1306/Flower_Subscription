@@ -1,10 +1,11 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Eye, EyeOff, Mail, Lock, User, ArrowRight } from 'lucide-react';
 import { authAPI } from '../utils/api';
 import { setAuthData, isAuthenticated, getToken } from '../utils/auth';
 
-import { initializeFirebase, getFirebaseAuth, getGoogleProvider } from '../utils/firebaseAuth';
+import { auth, googleProvider, testFirebaseAuth } from '../utils/firebase';
+import { signInWithPopup } from 'firebase/auth';
 import Swal from 'sweetalert2';
 
 
@@ -15,6 +16,8 @@ const LoginPage = () => {
     });
     const [showPassword, setShowPassword] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
+
+
 
     // Function để decode JWT token
     const decodeToken = (token) => {
@@ -199,12 +202,20 @@ const LoginPage = () => {
         try {
             setIsLoading(true);
 
-            // Initialize Firebase
-            initializeFirebase();
-            const auth = getFirebaseAuth();
-            const provider = getGoogleProvider();
+            console.log('🔍 Starting Google login with popup...');
+            console.log('🔍 Current domain:', window.location.hostname);
+            console.log('🔍 Current URL:', window.location.href);
 
-            if (!auth || !provider) {
+            // Test Firebase Auth first
+            await testFirebaseAuth();
+
+            console.log('🔍 Auth object:', auth);
+            console.log('🔍 Provider object:', googleProvider);
+
+            // Use Firebase Auth from unified config
+            const provider = googleProvider;
+
+            if (!provider) {
                 throw new Error('Firebase Auth not available');
             }
 
@@ -212,32 +223,73 @@ const LoginPage = () => {
             provider.addScope('email');
             provider.addScope('profile');
 
+            console.log('🔍 About to call signInWithPopup...');
+            console.log('🔍 Auth object before call:', auth);
+            console.log('🔍 Provider object before call:', provider);
+
             // Popup-based Google Sign-In
-            const result = await auth.signInWithPopup(provider);
-            const idToken = await result.user.getIdToken();
+            const result = await signInWithPopup(auth, provider);
+            console.log('🔍 Popup result:', result);
+            console.log('🔍 User from popup:', result.user);
 
-            const response = await authAPI.googleLogin({ idToken });
-            const data = response.data;
+            if (result.user) {
+                console.log('🔍 Google login successful:', result.user);
 
-            if (data.code === 1010) {
-                await Swal.fire({
-                    icon: 'success',
-                    title: 'Đăng nhập Google thành công!'
-                });
+                const idToken = await result.user.getIdToken();
+                console.log('🔍 Got ID token:', idToken);
 
-                setAuthData(data.result.token, {
-                    email: data.result.email,
-                    name: data.result.name,
-                    uid: data.result.uid,
-                    authenticated: true
-                });
+                console.log('🔍 Calling BE API with token...');
+                console.log('🔍 Token being sent:', idToken.substring(0, 50) + '...');
+                const response = await authAPI.googleLogin({ idToken });
+                console.log('🔍 BE API response:', response);
+                console.log('🔍 Response status:', response.status);
+                console.log('🔍 Response headers:', response.headers);
+                const data = response.data;
+                console.log('🔍 BE API data:', data);
+                console.log('🔍 Data code:', data.code);
+                console.log('🔍 Data message:', data.message);
 
-                window.location.href = '/';
-            } else {
-                throw new Error(data.message || 'Server authentication failed');
+                if (data.code === 1010) {
+                    await Swal.fire({
+                        icon: 'success',
+                        title: 'Đăng nhập Google thành công!',
+                        text: `Chào mừng ${data.result.name}!`,
+                        showConfirmButton: false,
+                        timer: 2000,
+                        timerProgressBar: true,
+                        background: '#f8fafc',
+                        color: '#1f2937',
+                        customClass: {
+                            popup: 'rounded-lg shadow-xl',
+                            title: 'text-xl font-bold text-gray-900',
+                            content: 'text-gray-600'
+                        }
+                    });
+
+                    setAuthData(data.result.token, {
+                        email: data.result.email,
+                        name: data.result.name,
+                        uid: data.result.uid,
+                        authenticated: true
+                    });
+
+                    window.location.href = '/';
+                } else {
+                    throw new Error(data.message || 'Server authentication failed');
+                }
             }
 
         } catch (error) {
+            console.error('🔍 Google popup error:', error);
+            console.error('🔍 Error response:', error.response);
+            console.error('🔍 Error status:', error.response?.status);
+            console.error('🔍 Error data:', error.response?.data);
+
+            if (error.code === 'auth/popup-closed-by-user') {
+                console.log('🔍 User closed popup');
+                return;
+            }
+
             Swal.fire({
                 icon: 'error',
                 title: 'Lỗi đăng nhập Google',

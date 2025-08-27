@@ -117,12 +117,12 @@ const Header = () => {
                                             Hồ sơ cá nhân
                                         </Link>
                                         <Link
-                                            to="/orders"
+                                            to="/my-subscriptions"
                                             className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
                                             onClick={() => setIsUserMenuOpen(false)}
                                         >
                                             <Package size={16} className="mr-3" />
-                                            Đơn hàng
+                                            Gói đăng ký
                                         </Link>
                                         <div className="border-t border-gray-200 my-1"></div>
                                         <button

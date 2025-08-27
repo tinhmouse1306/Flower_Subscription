@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import StaffLayout from './StaffLayout';
-import { staffAPI } from '../utils/api';
+import { subscriptionAPI } from '../utils/api';
 import {
   ShoppingCart,
   Truck,
@@ -10,72 +10,110 @@ import {
   Calendar
 } from 'lucide-react';
 
+// ---- helpers ----
+const toHHmm = (t) => {
+  try {
+    if (!t) return '—';
+    const d = new Date(t);
+    if (!isNaN(d)) {
+      const hh = String(d.getHours()).padStart(2, '0');
+      const mm = String(d.getMinutes()).padStart(2, '0');
+      return `${hh}:${mm}`;
+    }
+    return String(t).slice(0, 5);
+  } catch {
+    return '—';
+  }
+};
+
+const isSameYMD = (a, b = new Date()) => {
+  try {
+    const d = new Date(a);
+    if (isNaN(d)) return false;
+    return (
+      d.getFullYear() === b.getFullYear() &&
+      d.getMonth() === b.getMonth() &&
+      d.getDate() === b.getDate()
+    );
+  } catch {
+    return false;
+  }
+};
+
+const uiStatus = (apiStatus) => {
+  const v = String(apiStatus || '').toUpperCase();
+  if (v === 'AVAILABLE' || v === 'PENDING') return 'pending';
+  if (v === 'ACTIVE') return 'shipping';
+  if (v === 'COMPLETED') return 'delivered';
+  if (v === 'CANCELLED') return 'cancelled';
+  return 'pending';
+};
+
+// Chuẩn hoá stats -> cấu trúc UI đang dùng
+const normalizeStats = (s) => ([
+  {
+    title: 'Đơn hàng hôm nay',
+    value: String(s.todayOrders ?? 0),
+    icon: ShoppingCart,
+    color: 'text-blue-600',
+    bg: 'bg-blue-100'
+  },
+  {
+    title: 'Đơn hàng đang giao',
+    value: String(s.shipping ?? 0),
+    icon: Truck,
+    color: 'text-orange-600',
+    bg: 'bg-orange-100'
+  },
+  {
+    title: 'Đơn hàng đã hoàn thành',
+    value: String(s.delivered ?? 0),
+    icon: CheckCircle,
+    color: 'text-green-600',
+    bg: 'bg-green-100'
+  },
+  {
+    title: 'Khách hàng cần hỗ trợ',
+    value: String(s.needSupport ?? 0),
+    icon: AlertCircle,
+    color: 'text-red-600',
+    bg: 'bg-red-100'
+  },
+]);
+
+// Chuẩn hoá 1 bản ghi subscription về item hiển thị ở “Đơn hôm nay”
+const normalizeTodayItem = (sub) => ({
+  id: sub?.id ?? '-',
+  customer: sub?.user?.fullName || sub?.user?.name || (sub?.userId ? `User #${sub.userId}` : '—'),
+  package: sub?.subscriptionPackage?.name || sub?.package?.name || '—',
+  time: toHHmm(sub?.deliveryDate ?? sub?.createdAt),
+  status: uiStatus(sub?.status),
+});
+
+const getStatusColor = (status) => {
+  switch (status) {
+    case 'pending': return 'bg-yellow-100 text-yellow-800';
+    case 'processing': return 'bg-purple-100 text-purple-800';
+    case 'shipping': return 'bg-orange-100 text-orange-800';
+    case 'delivered': return 'bg-green-100 text-green-800';
+    default: return 'bg-gray-100 text-gray-800';
+  }
+};
+const getStatusText = (status) => {
+  switch (status) {
+    case 'pending': return 'Chờ xác nhận';
+    case 'processing': return 'Đang xử lý';
+    case 'shipping': return 'Đang giao';
+    case 'delivered': return 'Đã giao';
+    default: return status;
+  }
+};
+
 const StaffDashboard = () => {
   const [stats, setStats] = useState([]);
   const [todayOrders, setTodayOrders] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-
-  // Chuẩn hoá stats từ API -> cấu trúc UI đang dùng
-  const normalizeStats = (s) => ([
-    {
-      title: 'Đơn hàng hôm nay',
-      value: String(s?.todayOrders ?? s?.ordersToday ?? s?.totalToday ?? 0),
-      icon: ShoppingCart,
-      color: 'text-blue-600',
-      bg: 'bg-blue-100'
-    },
-    {
-      title: 'Đơn hàng đang giao',
-      value: String(s?.shipping ?? s?.inTransit ?? s?.processingShipping ?? 0),
-      icon: Truck,
-      color: 'text-orange-600',
-      bg: 'bg-orange-100'
-    },
-    {
-      title: 'Đơn hàng đã hoàn thành',
-      value: String(s?.delivered ?? s?.completed ?? 0),
-      icon: CheckCircle,
-      color: 'text-green-600',
-      bg: 'bg-green-100'
-    },
-    {
-      title: 'Khách hàng cần hỗ trợ',
-      value: String(s?.needSupport ?? s?.supportNeeded ?? 0),
-      icon: AlertCircle,
-      color: 'text-red-600',
-      bg: 'bg-red-100'
-    },
-  ]);
-
-  // Chuẩn hoá đơn hôm nay
-  const normalizeOrder = (o) => {
-    // Lấy mốc thời gian -> biến thành HH:mm nếu có thể
-    const toHHmm = (t) => {
-      try {
-        if (!t) return '—';
-        const dt = new Date(t);
-        if (!isNaN(dt)) {
-          const hh = String(dt.getHours()).padStart(2, '0');
-          const mm = String(dt.getMinutes()).padStart(2, '0');
-          return `${hh}:${mm}`;
-        }
-        // nếu đã là 'HH:mm' dạng string thì giữ lại 5 ký tự đầu
-        return String(t).slice(0, 5);
-      } catch {
-        return '—';
-      }
-    };
-
-    return {
-      id: o?.id ?? o?.orderId ?? o?.code ?? '-',
-      customer: o?.customer?.name ?? o?.customerName ?? o?.user?.fullName ?? '—',
-      package: o?.packageName ?? o?.subscription?.name ?? '—',
-      status: String(o?.status ?? 'pending').toLowerCase(),
-      time: toHHmm(o?.time ?? o?.deliveryTime ?? o?.scheduledTime ?? o?.createdAt),
-      address: o?.address?.fullAddress ?? o?.address ?? '—',
-    };
-  };
 
   useEffect(() => {
     let mounted = true;
@@ -84,51 +122,44 @@ const StaffDashboard = () => {
 
     (async () => {
       try {
-        const [statsRes, todayRes] = await Promise.all([
-          staffAPI.getDashboardStats(),
-          staffAPI.getTodayOrders()
-        ]);
+        // LẤY DANH SÁCH SUBSCRIPTIONS (thay cho các endpoint /api/staff/...)
+        const res = await subscriptionAPI.list({ pageSize: 200 });
+        const list = Array.isArray(res?.data?.items)
+          ? res.data.items
+          : (Array.isArray(res?.data) ? res.data : []);
+
+        // Thống kê
+        const shipping = list.filter(x => String(x.status).toUpperCase() === 'ACTIVE').length;
+        const delivered = list.filter(x => String(x.status).toUpperCase() === 'COMPLETED').length;
+        const needSupport = list.filter(x => ['AVAILABLE', 'PENDING'].includes(String(x.status).toUpperCase())).length;
+        const today = list.filter(x => isSameYMD(x.deliveryDate));
+
+        // Sắp xếp và map “Đơn hôm nay”
+        today.sort((a, b) => new Date(a.deliveryDate) - new Date(b.deliveryDate));
+        const todayUI = today.map(normalizeTodayItem);
 
         if (!mounted) return;
-
-        const s = statsRes?.data ?? {};
-        setStats(normalizeStats(s));
-
-        const raw = todayRes?.data?.items ?? todayRes?.data ?? [];
-        const list = Array.isArray(raw) ? raw.map(normalizeOrder) : [];
-        setTodayOrders(list);
+        setStats(normalizeStats({
+          todayOrders: today.length,
+          shipping,
+          delivered,
+          needSupport,
+        }));
+        setTodayOrders(todayUI);
       } catch (e) {
         console.error('Failed to load dashboard', e);
-        setError('Không tải được dữ liệu tổng quan.');
-        setStats(normalizeStats({}));   // fallback = 0
-        setTodayOrders([]);
+        if (mounted) {
+          setError('Không tải được dữ liệu tổng quan.');
+          setStats(normalizeStats({})); // fallback = 0
+          setTodayOrders([]);
+        }
       } finally {
-        setLoading(false);
+        mounted && setLoading(false);
       }
     })();
 
     return () => { mounted = false; };
   }, []);
-
-  const getStatusColor = (status) => {
-    switch (status) {
-      case 'pending': return 'bg-yellow-100 text-yellow-800';
-      case 'processing': return 'bg-purple-100 text-purple-800';
-      case 'shipping': return 'bg-orange-100 text-orange-800';
-      case 'delivered': return 'bg-green-100 text-green-800';
-      default: return 'bg-gray-100 text-gray-800';
-    }
-  };
-
-  const getStatusText = (status) => {
-    switch (status) {
-      case 'pending': return 'Chờ xác nhận';
-      case 'processing': return 'Đang xử lý';
-      case 'shipping': return 'Đang giao';
-      case 'delivered': return 'Đã giao';
-      default: return status;
-    }
-  };
 
   return (
     <StaffLayout>
@@ -194,7 +225,7 @@ const StaffDashboard = () => {
             </div>
           </div>
 
-          {/* Quick Actions */}
+          {/* Quick Actions (giữ nguyên) */}
           <div className="bg-white rounded-lg shadow p-6">
             <h3 className="text-lg font-semibold text-gray-900 mb-4">Thao tác nhanh</h3>
             <div className="space-y-3">
@@ -219,41 +250,6 @@ const StaffDashboard = () => {
                   <p className="text-sm text-gray-500">Xem lịch giao hàng hôm nay</p>
                 </div>
               </button>
-            </div>
-          </div>
-        </div>
-
-        {/* Recent Activity (giữ nguyên mock, có thể nối sau nếu có endpoint) */}
-        <div className="mt-8 bg-white rounded-lg shadow p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Hoạt động gần đây</h3>
-          <div className="space-y-4">
-            <div className="flex items-center space-x-3">
-              <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-              <div className="flex-1">
-                <p className="text-sm text-gray-900">Đã giao đơn hàng #123 cho khách hàng Nguyễn Văn A</p>
-                <p className="text-xs text-gray-500">2 phút trước</p>
-              </div>
-            </div>
-            <div className="flex items-center space-x-3">
-              <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-              <div className="flex-1">
-                <p className="text-sm text-gray-900">Xác nhận đơn hàng #124 cho khách hàng Trần Thị B</p>
-                <p className="text-xs text-gray-500">15 phút trước</p>
-              </div>
-            </div>
-            <div className="flex items-center space-x-3">
-              <div className="w-2 h-2 bg-orange-500 rounded-full"></div>
-              <div className="flex-1">
-                <p className="text-sm text-gray-900">Bắt đầu giao đơn hàng #125 cho khách hàng Lê Văn C</p>
-                <p className="text-xs text-gray-500">30 phút trước</p>
-              </div>
-            </div>
-            <div className="flex items-center space-x-3">
-              <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
-              <div className="flex-1">
-                <p className="text-sm text-gray-900">Cập nhật thông tin khách hàng Phạm Thị D</p>
-                <p className="text-xs text-gray-500">1 giờ trước</p>
-              </div>
             </div>
           </div>
         </div>

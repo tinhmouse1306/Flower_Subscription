@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import {
-  Menu, X, LogOut, Home, ShoppingCart, Users, Package, Calendar, Bell
+  Menu, X, LogOut, Home, ShoppingCart, Users, Bell
 } from 'lucide-react';
 
 import { getToken, logout } from '../utils/auth';
@@ -102,8 +102,6 @@ const StaffLayout = ({ children }) => {
     { name: 'Tổng quan', href: '/staff', icon: Home },
     { name: 'Quản lý đơn hàng', href: '/staff/orders', icon: ShoppingCart },
     { name: 'Khách hàng', href: '/staff/customers', icon: Users },
-    { name: 'Gói dịch vụ', href: '/staff/packages', icon: Package },
-    { name: 'Lịch giao hàng', href: '/staff/schedule', icon: Calendar },
   ];
 
   if (checking) {

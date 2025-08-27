@@ -233,7 +233,7 @@ const SubscriptionPage = () => {
 
                 Swal.fire({
                     title: 'Đăng ký thành công!',
-                    text: 'Chúng tôi sẽ liên hệ với bạn sớm nhất để xác nhận đơn hàng.',
+                    text: 'Bạn đã đăng ký gói thành công!',
                     icon: 'success',
                     confirmButtonText: 'OK',
                     confirmButtonColor: '#8B5CF6'

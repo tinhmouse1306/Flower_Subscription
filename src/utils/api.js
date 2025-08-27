@@ -4,7 +4,7 @@ import { getToken, logout } from './auth';
 // Tạo axios instance với base URL
 const api = axios.create({
     baseURL: 'https://flower-subscription-for-student-be.onrender.com',
-    timeout: 10000,
+    timeout: 30000, // Tăng timeout lên 30 giây
     headers: {
         'Content-Type': 'application/json',
     },

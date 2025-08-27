@@ -1,6 +1,8 @@
 import axios from 'axios';
 import { getToken, logout } from './auth';
 
+
+
 // Tạo axios instance với base URL
 const api = axios.create({
     baseURL: 'https://flower-subscription-for-student-be.onrender.com',
@@ -8,6 +10,12 @@ const api = axios.create({
     headers: {
         'Content-Type': 'application/json',
     },
+});
+
+api.interceptors.request.use((config) => {
+  const token = getToken();
+  if (token) config.headers.Authorization = `Bearer ${token}`;
+  return config;
 });
 
 // Request interceptor - tự động thêm token
@@ -153,6 +161,7 @@ export const subscriptionAPI = {
     // Create subscription
     createSubscription: (data) => api.post('/api/subscriptions', data),
 
+
     // Get all subscriptions (admin only)
     getAllSubscriptions: () => api.get('/api/subscriptions'),
 
@@ -164,6 +173,16 @@ export const subscriptionAPI = {
 
     // Update subscription status
     updateSubscriptionStatus: (id, status) => api.put(`/api/subscriptions/${id}/status?status=${status}`),
+
+    // Get user subscriptions
+    getUserSubscriptions: () => api.get('/api/subscriptions/user'),
+     // LIST
+  list: (params = {}) => api.get('/api/subscriptions', { params }),
+  // DETAIL
+  getById: (id) => api.get(`/api/subscriptions/${id}`),
+  // UPDATE STATUS qua query string
+  updateStatus: (id, status) => api.put(`/api/subscriptions/${id}/status`, null, { params: { status } }),
+
 };
 
 // Admin API

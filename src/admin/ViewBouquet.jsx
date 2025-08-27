@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import AdminLayout from './AdminLayout';
-import { ArrowLeft, Edit, Trash2, Flower } from 'lucide-react';
+import { ArrowLeft, Edit, Trash2, Flower, Package, Calendar, DollarSign, Users } from 'lucide-react';
 import { adminAPI } from '../utils/api';
 import Swal from 'sweetalert2';
+import AdminLayout from './AdminLayout';
+import CloudinaryImage from '../components/CloudinaryImage';
 
 const ViewBouquet = () => {
     const { id } = useParams();
@@ -130,10 +131,13 @@ const ViewBouquet = () => {
                         <div className="bg-white rounded-lg shadow-sm border p-6">
                             <h2 className="text-lg font-semibold text-gray-900 mb-4">Ảnh Bouquet</h2>
                             <div className="aspect-w-16 aspect-h-9">
-                                <img
+                                <CloudinaryImage
                                     src={bouquet.imageUrl || '/placeholder-image.jpg'}
                                     alt={bouquet.name}
                                     className="w-full h-64 object-cover rounded-lg"
+                                    size="medium"
+                                    width={400}
+                                    height={256}
                                     onError={(e) => {
                                         e.target.src = '/placeholder-image.jpg';
                                     }}
@@ -184,10 +188,13 @@ const ViewBouquet = () => {
                                     {bouquet.bouquetFlowers.map((bouquetFlower, index) => (
                                         <div key={bouquetFlower.id || index} className="flex items-center space-x-4 p-4 border rounded-lg">
                                             <div className="flex-shrink-0 h-12 w-12">
-                                                <img
+                                                <CloudinaryImage
                                                     src={bouquetFlower.flower?.imageUrl || '/placeholder-image.jpg'}
                                                     alt={bouquetFlower.flower?.type}
                                                     className="h-12 w-12 rounded-lg object-cover"
+                                                    size="thumbnail"
+                                                    width={48}
+                                                    height={48}
                                                     onError={(e) => {
                                                         e.target.src = '/placeholder-image.jpg';
                                                     }}

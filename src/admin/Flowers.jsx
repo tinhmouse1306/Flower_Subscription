@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import AdminLayout from './AdminLayout';
 import { adminAPI, subscriptionAPI } from '../utils/api';
@@ -14,6 +14,7 @@ import {
     ChevronLeft,
     ChevronRight
 } from 'lucide-react';
+import CloudinaryImage from '../components/CloudinaryImage';
 
 const AdminFlowers = () => {
     const [flowers, setFlowers] = useState([]);
@@ -222,12 +223,15 @@ const AdminFlowers = () => {
                         {currentFlowers.map((flower) => (
                             <div key={flower.id} className="bg-white rounded-lg shadow overflow-hidden">
                                 <div className="relative">
-                                    <img
-                                        src={flower.image || 'https://via.placeholder.com/300x200?text=Không+có+hình+ảnh'}
+                                    <CloudinaryImage
+                                        src={flower.image || 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZjNmNGY2Ii8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxNCIgZmlsbD0iIzY2NzM4NyIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPk5vIEltYWdlPC90ZXh0Pjwvc3ZnPg=='}
                                         alt={flower.name || 'Hoa'}
                                         className="w-full h-48 object-cover"
+                                        size="medium"
+                                        width={300}
+                                        height={192}
                                         onError={(e) => {
-                                            e.target.src = 'https://via.placeholder.com/300x200?text=Không+có+hình+ảnh';
+                                            e.target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZjNmNGY2Ii8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxNCIgZmlsbD0iIzY2NzM4NyIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPk5vIEltYWdlPC90ZXh0Pjwvc3ZnPg==';
                                         }}
                                     />
                                     <div className="absolute top-2 right-2">

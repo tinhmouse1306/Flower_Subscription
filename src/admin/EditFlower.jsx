@@ -3,13 +3,18 @@ import { useParams, useNavigate } from 'react-router-dom';
 import AdminLayout from './AdminLayout';
 import { adminAPI } from '../utils/api';
 import { ArrowLeft, Save, Upload } from 'lucide-react';
+import { uploadImage } from '../utils/imageUpload';
 import Swal from 'sweetalert2';
+import CloudinaryImage from '../components/CloudinaryImage';
 
 const EditFlower = () => {
     const { id } = useParams();
     const navigate = useNavigate();
     const [isLoading, setIsLoading] = useState(true);
     const [isSaving, setIsSaving] = useState(false);
+    const [uploading, setUploading] = useState(false);
+    const [selectedFile, setSelectedFile] = useState(null);
+    const [previewUrl, setPreviewUrl] = useState(null);
     const [flower, setFlower] = useState(null);
     const [formData, setFormData] = useState({
         name: '',
@@ -71,6 +76,59 @@ const EditFlower = () => {
             ...prev,
             [name]: value
         }));
+    };
+
+    const handleFileSelect = (event) => {
+        const file = event.target.files[0];
+        if (file) {
+            setSelectedFile(file);
+
+            // Create preview URL
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                setPreviewUrl(e.target.result);
+            };
+            reader.readAsDataURL(file);
+        }
+    };
+
+    const handleUploadImage = async () => {
+        if (!selectedFile) {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Cảnh báo',
+                text: 'Vui lòng chọn một file ảnh',
+            });
+            return;
+        }
+
+        setUploading(true);
+        try {
+            const imageUrl = await uploadImage(selectedFile, 'flowers');
+            setFormData(prev => ({
+                ...prev,
+                image: imageUrl
+            }));
+
+            // Clear file input and preview
+            setSelectedFile(null);
+            setPreviewUrl(null);
+
+            Swal.fire({
+                icon: 'success',
+                title: 'Thành công',
+                text: 'Upload ảnh thành công!',
+            });
+        } catch (error) {
+            console.error('Upload failed:', error);
+            Swal.fire({
+                icon: 'error',
+                title: 'Lỗi',
+                text: 'Upload ảnh thất bại: ' + error.message,
+            });
+        } finally {
+            setUploading(false);
+        }
     };
 
     const handleSubmit = async (e) => {
@@ -247,45 +305,72 @@ const EditFlower = () => {
                             />
                         </div>
 
-                        {/* Image URL */}
+                        {/* Image Upload */}
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">
-                                URL hình ảnh
-                            </label>
-                            <div className="flex">
-                                <input
-                                    type="url"
-                                    name="image"
-                                    value={formData.image}
-                                    onChange={handleInputChange}
-                                    className="flex-1 px-3 py-2 border border-gray-300 rounded-l-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
-                                    placeholder="https://example.com/image.jpg"
-                                />
-                                <button
-                                    type="button"
-                                    className="px-4 py-2 bg-gray-100 border border-l-0 border-gray-300 rounded-r-md hover:bg-gray-200"
-                                >
-                                    <Upload size={16} />
-                                </button>
+                            <h2 className="text-xl font-semibold text-gray-900 mb-4">Ảnh loại hoa</h2>
+
+                            <div className="space-y-4">
+                                {/* Current Image */}
+                                {formData.image && (
+                                    <div className="mb-4">
+                                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                                            Ảnh hiện tại
+                                        </label>
+                                        <CloudinaryImage
+                                            src={formData.image}
+                                            alt="Current"
+                                            className="w-full h-48 object-cover rounded-lg"
+                                            size="medium"
+                                            width={400}
+                                            height={192}
+                                        />
+                                    </div>
+                                )}
+
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                        Thay đổi ảnh
+                                    </label>
+                                    <input
+                                        type="file"
+                                        accept="image/*"
+                                        onChange={handleFileSelect}
+                                        className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                                    />
+                                </div>
+
+                                {previewUrl && (
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                                            Xem trước ảnh mới
+                                        </label>
+                                        <img
+                                            src={previewUrl}
+                                            alt="Preview"
+                                            className="w-full h-48 object-cover rounded-lg"
+                                        />
+                                        <button
+                                            type="button"
+                                            onClick={handleUploadImage}
+                                            disabled={uploading}
+                                            className="mt-2 bg-blue-500 text-white py-2 px-4 rounded-lg hover:bg-blue-600 disabled:bg-gray-400 flex items-center"
+                                        >
+                                            {uploading ? (
+                                                <>
+                                                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                                                    Đang upload...
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <Upload size={16} className="mr-2" />
+                                                    Upload ảnh mới
+                                                </>
+                                            )}
+                                        </button>
+                                    </div>
+                                )}
                             </div>
                         </div>
-
-                        {/* Preview */}
-                        {formData.image && (
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-2">
-                                    Xem trước hình ảnh
-                                </label>
-                                <img
-                                    src={formData.image}
-                                    alt="Preview"
-                                    className="w-48 h-32 object-cover rounded-lg border"
-                                    onError={(e) => {
-                                        e.target.src = 'https://via.placeholder.com/192x128?text=Không+có+hình+ảnh';
-                                    }}
-                                />
-                            </div>
-                        )}
 
                         {/* Submit Button */}
                         <div className="flex justify-end space-x-4 pt-6 border-t">

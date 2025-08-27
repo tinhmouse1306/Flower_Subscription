@@ -51,7 +51,7 @@ const AdminLayout = ({ children }) => {
         { name: 'Gói đăng ký', href: '/admin/packages', icon: Package },
         { name: 'Loại hoa', href: '/admin/flowers', icon: Flower },
         { name: 'Bouquet', href: '/admin/bouquets', icon: Leaf },
-        { name: 'Khách hàng', href: '/admin/customers', icon: Users },
+        { name: 'Tài khoản', href: '/admin/customers', icon: Users },
         { name: 'Báo cáo', href: '/admin/reports', icon: BarChart3 },
     ];
 

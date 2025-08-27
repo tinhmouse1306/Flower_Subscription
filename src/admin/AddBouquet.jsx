@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import AdminLayout from './AdminLayout';
-import { ArrowLeft, Plus, X, Upload } from 'lucide-react';
+import { ArrowLeft, Plus, X, Upload, Check } from 'lucide-react';
 import { adminAPI, subscriptionAPI } from '../utils/api';
 import { uploadImage } from '../utils/imageUpload';
 import Swal from 'sweetalert2';
+import CloudinaryImage from '../components/CloudinaryImage';
 
 const AddBouquet = () => {
     const navigate = useNavigate();
@@ -278,57 +279,149 @@ const AddBouquet = () => {
                             <div className="bg-white rounded-lg shadow-sm border p-6">
                                 <div className="flex justify-between items-center mb-4">
                                     <h2 className="text-lg font-semibold text-gray-900">Chọn hoa</h2>
-                                    <button
-                                        type="button"
-                                        onClick={addFlower}
-                                        className="btn-primary flex items-center space-x-2"
-                                    >
-                                        <Plus size={16} />
-                                        <span>Thêm hoa</span>
-                                    </button>
+                                    <span className="text-sm text-gray-500">
+                                        Đã chọn: {formData.flowers.length} loại
+                                    </span>
                                 </div>
 
-                                {formData.flowers.length === 0 ? (
-                                    <p className="text-gray-500 text-center py-8">
-                                        Chưa có hoa nào được chọn
-                                    </p>
-                                ) : (
-                                    <div className="space-y-4">
-                                        {formData.flowers.map((flower, index) => (
-                                            <div key={index} className="flex items-center space-x-4 p-4 border rounded-lg">
-                                                <div className="flex-1">
-                                                    <select
-                                                        value={flower.flowerId}
-                                                        onChange={(e) => updateFlower(index, 'flowerId', e.target.value)}
-                                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
-                                                    >
-                                                        <option value="">Chọn loại hoa</option>
-                                                        {flowers.map(f => (
-                                                            <option key={f.id} value={f.id}>
-                                                                {f.type} - {f.color} (Còn: {f.stockQuantity})
-                                                            </option>
-                                                        ))}
-                                                    </select>
-                                                </div>
-                                                <div className="w-24">
-                                                    <input
-                                                        type="number"
-                                                        min="1"
-                                                        value={flower.quantity}
-                                                        onChange={(e) => updateFlower(index, 'quantity', parseInt(e.target.value))}
-                                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
-                                                        placeholder="SL"
-                                                    />
-                                                </div>
-                                                <button
-                                                    type="button"
-                                                    onClick={() => removeFlower(index)}
-                                                    className="p-2 text-red-600 hover:bg-red-50 rounded-lg"
+                                {/* Flower Selection Grid */}
+                                <div className="mb-6">
+                                    <h3 className="text-md font-medium text-gray-700 mb-3">Danh sách hoa có sẵn:</h3>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 max-h-96 overflow-y-auto">
+                                        {flowers.map((flower) => {
+                                            // Use the correct field name for flower ID
+                                            const flowerId = flower.id || flower.flowerId;
+                                            const isSelected = formData.flowers.some(f => f.flowerId === flowerId);
+                                            const selectedFlower = formData.flowers.find(f => f.flowerId === flowerId);
+
+                                            return (
+                                                <div
+                                                    key={flowerId}
+                                                    className={`relative border rounded-lg p-3 cursor-pointer transition-all ${isSelected
+                                                        ? 'border-primary-500 bg-primary-50'
+                                                        : 'border-gray-200 hover:border-gray-300'
+                                                        }`}
+                                                    onClick={() => {
+                                                        if (isSelected) {
+                                                            // Remove flower
+                                                            setFormData(prev => ({
+                                                                ...prev,
+                                                                flowers: prev.flowers.filter(f => f.flowerId !== flowerId)
+                                                            }));
+                                                        } else {
+                                                            // Add flower
+                                                            setFormData(prev => ({
+                                                                ...prev,
+                                                                flowers: [...prev.flowers, { flowerId: flowerId, quantity: 1 }]
+                                                            }));
+                                                        }
+                                                    }}
                                                 >
-                                                    <X size={16} />
-                                                </button>
-                                            </div>
-                                        ))}
+                                                    {/* Selection indicator */}
+                                                    {isSelected && (
+                                                        <div className="absolute top-2 right-2 w-6 h-6 bg-primary-500 rounded-full flex items-center justify-center">
+                                                            <Check size={14} className="text-white" />
+                                                        </div>
+                                                    )}
+
+                                                    {/* Flower image */}
+                                                    <div className="w-full h-24 mb-3">
+                                                        <CloudinaryImage
+                                                            src={flower.image || 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjE2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZjNmNGY2Ii8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxMiIgZmlsbD0iIzY2NzM4NyIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPk5vIEltYWdlPC90ZXh0Pjwvc3ZnPg=='}
+                                                            alt={flower.type}
+                                                            className="w-full h-full object-cover rounded-lg"
+                                                            size="small"
+                                                            width={200}
+                                                            height={96}
+                                                        />
+                                                    </div>
+
+                                                    {/* Flower info */}
+                                                    <div className="text-center">
+                                                        <h4 className="font-medium text-gray-900 text-sm mb-1">
+                                                            {flower.type}
+                                                        </h4>
+                                                        <p className="text-xs text-gray-500 mb-2">
+                                                            {flower.color} • Còn: {flower.stockQuantity}
+                                                        </p>
+
+                                                        {/* Quantity input (only show if selected) */}
+                                                        {isSelected && (
+                                                            <div className="flex items-center justify-center space-x-2">
+                                                                <label className="text-xs text-gray-600">SL:</label>
+                                                                <input
+                                                                    type="number"
+                                                                    min="1"
+                                                                    max={flower.stockQuantity}
+                                                                    value={selectedFlower?.quantity || 1}
+                                                                    onChange={(e) => {
+                                                                        const quantity = parseInt(e.target.value) || 1;
+                                                                        setFormData(prev => ({
+                                                                            ...prev,
+                                                                            flowers: prev.flowers.map(f =>
+                                                                                f.flowerId === flowerId
+                                                                                    ? { ...f, quantity }
+                                                                                    : f
+                                                                            )
+                                                                        }));
+                                                                    }}
+                                                                    className="w-16 px-2 py-1 text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-primary-500"
+                                                                    onClick={(e) => e.stopPropagation()}
+                                                                />
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                </div>
+
+                                {/* Selected Flowers Summary */}
+                                {formData.flowers.length > 0 && (
+                                    <div className="border-t pt-4">
+                                        <h3 className="text-md font-medium text-gray-700 mb-3">Hoa đã chọn:</h3>
+                                        <div className="space-y-2">
+                                            {formData.flowers.map((selectedFlower, index) => {
+                                                const flower = flowers.find(f => f.id === selectedFlower.flowerId);
+                                                if (!flower) return null;
+
+                                                return (
+                                                    <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                                                        <div className="flex items-center space-x-3">
+                                                            <CloudinaryImage
+                                                                src={flower.image || 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlZ2h0PSI0MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZjNmNGY2Ii8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSI4IiBmaWxsPSIjNjY3Mzg3IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBkeT0iLjNlbSI+Tm8gSW1hZ2U8L3RleHQ+PC9zdmc+'}
+                                                                alt={flower.type}
+                                                                className="w-10 h-10 object-cover rounded"
+                                                                size="thumbnail"
+                                                                width={40}
+                                                                height={40}
+                                                            />
+                                                            <div>
+                                                                <p className="font-medium text-sm text-gray-900">
+                                                                    {flower.type} - {flower.color}
+                                                                </p>
+                                                                <p className="text-xs text-gray-500">
+                                                                    Số lượng: {selectedFlower.quantity}
+                                                                </p>
+                                                            </div>
+                                                        </div>
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => {
+                                                                setFormData(prev => ({
+                                                                    ...prev,
+                                                                    flowers: prev.flowers.filter((_, i) => i !== index)
+                                                                }));
+                                                            }}
+                                                            className="p-1 text-red-600 hover:bg-red-50 rounded"
+                                                        >
+                                                            <X size={16} />
+                                                        </button>
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
                                     </div>
                                 )}
                             </div>

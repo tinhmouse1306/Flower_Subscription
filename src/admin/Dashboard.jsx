@@ -229,34 +229,6 @@ const AdminDashboard = () => {
                         </div>
                     </div>
                 </div>
-
-                {/* Quick Actions */}
-                <div className="mt-8 bg-white rounded-lg shadow p-6">
-                    <h3 className="text-lg font-semibold text-gray-900 mb-4">Thao tác nhanh</h3>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <button className="flex items-center p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
-                            <Package className="h-8 w-8 text-red-600 mr-3" />
-                            <div className="text-left">
-                                <p className="font-medium text-gray-900">Quản lý gói</p>
-                                <p className="text-sm text-gray-500">Thêm, sửa, xóa gói dịch vụ</p>
-                            </div>
-                        </button>
-                        <button className="flex items-center p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
-                            <ShoppingCart className="h-8 w-8 text-blue-600 mr-3" />
-                            <div className="text-left">
-                                <p className="font-medium text-gray-900">Xem đơn hàng</p>
-                                <p className="text-sm text-gray-500">Quản lý tất cả đơn hàng</p>
-                            </div>
-                        </button>
-                        <button className="flex items-center p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
-                            <BarChart3 className="h-8 w-8 text-green-600 mr-3" />
-                            <div className="text-left">
-                                <p className="font-medium text-gray-900">Báo cáo</p>
-                                <p className="text-sm text-gray-500">Xem báo cáo chi tiết</p>
-                            </div>
-                        </button>
-                    </div>
-                </div>
             </div>
         </AdminLayout>
     );

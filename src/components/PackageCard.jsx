@@ -1,4 +1,7 @@
-import { Check, Star } from 'lucide-react';
+import React from 'react';
+import { Star, Calendar, Clock, Users } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import CloudinaryImage from './CloudinaryImage';
 
 const PackageCard = ({ package: packageData, onSelect }) => {
     const formatPrice = (price) => {
@@ -37,10 +40,13 @@ const PackageCard = ({ package: packageData, onSelect }) => {
 
             {/* Package Image */}
             <div className="relative mb-6">
-                <img
+                <CloudinaryImage
                     src={safePackage.image}
                     alt={safePackage.name}
                     className="w-full h-48 object-cover rounded-lg"
+                    size="medium"
+                    width={400}
+                    height={192}
                     onError={(e) => {
                         e.target.src = 'https://images.unsplash.com/photo-1490750967868-88aa4486c946?w=400&h=300&fit=crop';
                     }}

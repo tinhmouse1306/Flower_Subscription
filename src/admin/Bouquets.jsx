@@ -4,6 +4,7 @@ import AdminLayout from './AdminLayout';
 import { Plus, Edit, Trash2, Eye, Search, Filter, RefreshCw } from 'lucide-react';
 import { adminAPI } from '../utils/api';
 import Swal from 'sweetalert2';
+import CloudinaryImage from '../components/CloudinaryImage';
 
 const Bouquets = () => {
     const [bouquets, setBouquets] = useState([]);
@@ -162,12 +163,15 @@ const Bouquets = () => {
                                         <tr key={bouquet.id} className="hover:bg-gray-50">
                                             <td className="px-6 py-4 whitespace-nowrap">
                                                 <div className="flex-shrink-0 h-16 w-16">
-                                                    <img
+                                                    <CloudinaryImage
                                                         className="h-16 w-16 rounded-lg object-cover"
-                                                        src={bouquet.imageUrl || '/placeholder-image.jpg'}
+                                                        src={bouquet.imageUrl || 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjQiIGhlZ2h0PSI2NCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZjNmNGY2Ii8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxMCIgZmlsbD0iIzY2NzM4NyIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPk5vIEltYWdlPC90ZXh0Pjwvc3ZnPg=='}
                                                         alt={bouquet.name}
+                                                        size="thumbnail"
+                                                        width={64}
+                                                        height={64}
                                                         onError={(e) => {
-                                                            e.target.src = '/placeholder-image.jpg';
+                                                            e.target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjQiIGhlZ2h0PSI2NCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZjNmNGY2Ii8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxMCIgZmlsbD0iIzY2NzM4NyIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPk5vIEltYWdlPC90ZXh0Pjwvc3ZnPg==';
                                                         }}
                                                     />
                                                 </div>

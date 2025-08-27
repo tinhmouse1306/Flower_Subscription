@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import StaffLayout from './StaffLayout';
 import { Search, Calendar } from 'lucide-react';
 
-// ---- helpers ----
+/* ===== Helpers ===== */
 const toDate10 = (x) => {
   if (!x) return '';
   try {
@@ -14,7 +14,7 @@ const toDate10 = (x) => {
 };
 const sum = (arr) => arr.reduce((a, b) => a + (Number(b) || 0), 0);
 
-// Gom subscriptions => danh sách khách hàng
+/** Gom subscriptions -> customers */
 const buildCustomers = (subs) => {
   const map = new Map();
 
@@ -22,15 +22,14 @@ const buildCustomers = (subs) => {
     const userId = s?.userId ?? s?.user?.id;
     if (!userId) return;
 
-    const key = String(userId);
     const price = Number(s?.price ?? 0);
     const status = String(s?.status || '').toUpperCase();
-    const delivered = status === 'COMPLETED';
+    const delivered = ['COMPLETED', 'DELIVERED', 'SUCCESS'].includes(status);
     const active = status === 'ACTIVE';
 
-    const base = map.get(key) || {
+    const base = map.get(userId) || {
       id: userId,
-      name: s?.user?.fullName || s?.user?.name || (s?.userId ? `User #${s.userId}` : '—'),
+      name: s?.user?.fullName || s?.user?.name || `User #${userId}`,
       email: s?.user?.email || '',
       phone: s?.user?.phone || '',
       orders: 0,
@@ -53,7 +52,7 @@ const buildCustomers = (subs) => {
       if (!cur || new Date(d) > cur) base.lastDelivery = d;
     }
 
-    map.set(key, base);
+    map.set(userId, base);
   });
 
   return Array.from(map.values()).map((c) => ({
@@ -63,6 +62,49 @@ const buildCustomers = (subs) => {
   }));
 };
 
+/** Thử tuần tự nhiều base cho chắc ăn */
+const API_BASES = [
+  (import.meta?.env?.VITE_API_BASE || '').replace(/\/+$/, ''),
+  'http://localhost:8081',
+].filter(Boolean);
+
+/** Lấy token (nếu BE yêu cầu) từ localStorage các key phổ biến */
+const getToken = () =>
+  localStorage.getItem('token') ||
+  localStorage.getItem('accessToken') ||
+  localStorage.getItem('access_token') ||
+  '';
+
+/** Fetch subscriptions trực tiếp, không dùng axios instance của app */
+async function fetchSubscriptions() {
+  let lastErr;
+  const token = getToken();
+  const headers = { Accept: 'application/json' };
+  if (token) headers['Authorization'] = `Bearer ${token}`;
+
+  for (const base of API_BASES) {
+    try {
+      const res = await fetch(`${base}/api/subscriptions`, { headers });
+      if (!res.ok) {
+        lastErr = new Error(`${base}/api/subscriptions -> HTTP ${res.status}`);
+        continue;
+      }
+      const data = await res.json();
+      const items = Array.isArray(data?.items)
+        ? data.items
+        : Array.isArray(data?.content)
+        ? data.content
+        : Array.isArray(data)
+        ? data
+        : [];
+      return items;
+    } catch (e) {
+      lastErr = e;
+    }
+  }
+  throw lastErr || new Error('Không gọi được bất kỳ API base nào.');
+}
+
 const Customers = () => {
   const [rows, setRows] = useState([]);
   const [query, setQuery] = useState('');
@@ -71,51 +113,22 @@ const Customers = () => {
 
   useEffect(() => {
     let alive = true;
-
-    const load = async () => {
+    (async () => {
       setLoading(true);
       setErr('');
       try {
-        let res;
-
-        // 1) Thử wrapper chuẩn
-        try {
-          res = await subscriptionAPI.list({ pageSize: 500 });
-        } catch (e1) {
-          // 2) Fallback khi server dùng prefix khác
-          const candidates = ['/api/subscriptions', '/subscriptions'];
-          let lastErr = e1;
-          for (const path of candidates) {
-            try {
-              res = await api.get(path, { params: { pageSize: 500 } });
-              break;
-            } catch (e) {
-              lastErr = e;
-            }
-          }
-          if (!res) throw lastErr;
-        }
-
-        const data = res?.data;
-        const items = Array.isArray(data?.items)
-          ? data.items
-          : Array.isArray(data?.content)
-          ? data.content
-          : Array.isArray(data)
-          ? data
-          : [];
-
-        const customers = buildCustomers(items);
+        const subs = await fetchSubscriptions();
+        const customers = buildCustomers(subs);
         if (alive) setRows(customers);
       } catch (e) {
-        const status = e?.response?.status;
         console.error('getCustomers failed', e);
         if (alive) {
+          const msg = String(e?.message || '');
           setErr(
-            status === 401
+            msg.includes('401')
               ? 'Phiên đăng nhập hết hạn/thiếu quyền (401).'
-              : status === 404
-              ? 'API /subscriptions không tồn tại trên server hiện tại (404).'
+              : msg.includes('404')
+              ? 'API /api/subscriptions không tồn tại (404).'
               : 'Không tải được danh sách khách hàng.'
           );
           setRows([]);
@@ -123,12 +136,8 @@ const Customers = () => {
       } finally {
         alive && setLoading(false);
       }
-    };
-
-    load();
-    return () => {
-      alive = false;
-    };
+    })();
+    return () => { alive = false; };
   }, []);
 
   const filtered = useMemo(() => {
@@ -148,11 +157,13 @@ const Customers = () => {
   return (
     <StaffLayout>
       <div>
+        {/* Header */}
         <div className="mb-8">
           <h1 className="text-2xl font-bold text-gray-900">Quản lý khách hàng</h1>
           <p className="text-gray-600">Xem thông tin và hỗ trợ khách hàng</p>
         </div>
 
+        {/* Search */}
         <div className="bg-white rounded-lg shadow p-6 mb-6">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 h-4 w-4" />
@@ -166,9 +177,11 @@ const Customers = () => {
           </div>
         </div>
 
+        {/* Loading / Error */}
         {loading && <div className="text-sm text-gray-500 mb-4">Đang tải khách hàng…</div>}
         {!!err && <div className="text-sm text-red-600 mb-4">{err}</div>}
 
+        {/* Table */}
         <div className="bg-white rounded-lg shadow overflow-x-auto">
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
@@ -237,6 +250,7 @@ const Customers = () => {
           )}
         </div>
 
+        {/* KPIs */}
         <div className="mt-6 grid grid-cols-1 md:grid-cols-4 gap-4">
           <div className="bg-white rounded-lg shadow p-4">
             <div className="text-sm font-medium text-gray-500">Tổng khách hàng</div>

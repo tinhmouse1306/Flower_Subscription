@@ -4,10 +4,11 @@ import PackagesPage from './pages/PackagesPage';
 import FlowerSelectionPage from './pages/FlowerSelectionPage';
 import SubscriptionPage from './pages/SubscriptionPage';
 import MySubscriptionsPage from './pages/MySubscriptionsPage';
+import SubscriptionDetailPage from './pages/SubscriptionDetailPage';
+import ProfilePage from './pages/ProfilePage';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import ForgotPasswordPage from './pages/ForgotPasswordPage';
-import CartPage from './pages/CartPage';
 import PaymentSuccessPage from './pages/PaymentSuccessPage';
 import ProtectedRoute from './components/ProtectedRoute';
 import Header from './components/Header';
@@ -191,6 +192,24 @@ function App() {
             <Footer />
           </>
         } />
+        <Route path="/subscription-detail/:id" element={
+          <>
+            <Header />
+            <ProtectedRoute>
+              <SubscriptionDetailPage />
+            </ProtectedRoute>
+            <Footer />
+          </>
+        } />
+        <Route path="/profile" element={
+          <>
+            <Header />
+            <ProtectedRoute>
+              <ProfilePage />
+            </ProtectedRoute>
+            <Footer />
+          </>
+        } />
         <Route path="/login" element={
           <>
             <Header />
@@ -213,15 +232,7 @@ function App() {
           </>
         } />
 
-        <Route path="/cart" element={
-          <>
-            <Header />
-            <ProtectedRoute>
-              <CartPage />
-            </ProtectedRoute>
-            <Footer />
-          </>
-        } />
+
         <Route path="/payment-success" element={
           <>
             <Header />
@@ -231,25 +242,6 @@ function App() {
             <Footer />
           </>
         } />
-        <Route path="/about" element={
-          <>
-            <Header />
-            <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-              <h1 className="text-4xl font-bold text-gray-800">About Us Page</h1>
-            </div>
-            <Footer />
-          </>
-        } />
-        <Route path="/contact" element={
-          <>
-            <Header />
-            <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-              <h1 className="text-4xl font-bold text-gray-800">Contact Page</h1>
-            </div>
-            <Footer />
-          </>
-        } />
-
       </Routes>
     </BrowserRouter>
   );

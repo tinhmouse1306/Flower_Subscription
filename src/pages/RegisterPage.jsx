@@ -2,12 +2,12 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Eye, EyeOff, Mail, Lock, User } from 'lucide-react';
 import { authAPI } from '../utils/api';
+import Swal from 'sweetalert2';
 
 const RegisterPage = () => {
     const [formData, setFormData] = useState({
         userName: '',
-        firstName: '',
-        lastName: '',
+        fullName: '',
         email: '',
         password: '',
         confirmPassword: ''
@@ -31,7 +31,12 @@ const RegisterPage = () => {
 
         // Validate passwords match
         if (formData.password !== formData.confirmPassword) {
-            alert('Mật khẩu xác nhận không khớp!');
+            Swal.fire({
+                icon: 'error',
+                title: 'Lỗi!',
+                text: 'Mật khẩu xác nhận không khớp!',
+                confirmButtonColor: '#EF4444'
+            });
             setIsLoading(false);
             return;
         }
@@ -40,8 +45,8 @@ const RegisterPage = () => {
             const response = await authAPI.register({
                 userName: formData.userName,
                 password: formData.password,
-                email: formData.email,
-                fullName: formData.firstName + ' ' + formData.lastName,
+                email: formData.fullName,        // Swap: gửi fullName vào email field
+                fullName: formData.email,        // Swap: gửi email vào fullName field
                 status: true
             });
 
@@ -50,16 +55,47 @@ const RegisterPage = () => {
             if (data.code === 1010) {
                 // Success
                 console.log('Registration successful:', data.result);
-                alert('Đăng ký thành công! Vui lòng đăng nhập để tiếp tục.');
-                // Redirect to login
-                window.location.href = '/login';
+
+                console.log('Registration result:', data.result);
+
+                // Show success popup
+                await Swal.fire({
+                    icon: 'success',
+                    title: 'Đăng ký thành công!',
+                    text: 'Tài khoản của bạn đã được tạo thành công. Vui lòng đăng nhập để tiếp tục.',
+                    showConfirmButton: false,
+                    timer: 1000,
+                    timerProgressBar: true,
+                    background: '#f8fafc',
+                    color: '#1f2937',
+                    customClass: {
+                        popup: 'rounded-lg shadow-xl',
+                        title: 'text-xl font-bold text-gray-900',
+                        content: 'text-gray-600'
+                    }
+                });
+
+                // Redirect to login after 1 second
+                setTimeout(() => {
+                    window.location.href = '/login';
+                }, 1000);
             } else {
-                alert('Đăng ký thất bại: ' + data.message);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Đăng ký thất bại',
+                    text: data.message || 'Có lỗi xảy ra khi đăng ký. Vui lòng thử lại.',
+                    confirmButtonColor: '#EF4444'
+                });
             }
         } catch (error) {
             console.error('Registration error:', error);
             const errorMessage = error.response?.data?.message || 'Có lỗi xảy ra khi đăng ký. Vui lòng thử lại.';
-            alert(errorMessage);
+            Swal.fire({
+                icon: 'error',
+                title: 'Lỗi đăng ký',
+                text: errorMessage,
+                confirmButtonColor: '#EF4444'
+            });
         } finally {
             setIsLoading(false);
         }
@@ -111,38 +147,20 @@ const RegisterPage = () => {
                             </div>
                         </div>
 
-                        <div className="grid md:grid-cols-2 gap-4">
-                            <div>
-                                <label htmlFor="firstName" className="block text-sm font-medium text-gray-700 mb-2">
-                                    Họ và tên đệm *
-                                </label>
-                                <input
-                                    id="firstName"
-                                    name="firstName"
-                                    type="text"
-                                    required
-                                    value={formData.firstName}
-                                    onChange={handleInputChange}
-                                    className="block w-full px-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                                    placeholder="Nhập họ và tên đệm"
-                                />
-                            </div>
-
-                            <div>
-                                <label htmlFor="lastName" className="block text-sm font-medium text-gray-700 mb-2">
-                                    Tên *
-                                </label>
-                                <input
-                                    id="lastName"
-                                    name="lastName"
-                                    type="text"
-                                    required
-                                    value={formData.lastName}
-                                    onChange={handleInputChange}
-                                    className="block w-full px-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                                    placeholder="Nhập tên"
-                                />
-                            </div>
+                        <div>
+                            <label htmlFor="fullName" className="block text-sm font-medium text-gray-700 mb-2">
+                                Họ và tên *
+                            </label>
+                            <input
+                                id="fullName"
+                                name="fullName"
+                                type="text"
+                                required
+                                value={formData.fullName}
+                                onChange={handleInputChange}
+                                className="block w-full px-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                                placeholder="Nhập họ và tên đầy đủ"
+                            />
                         </div>
 
                         <div>

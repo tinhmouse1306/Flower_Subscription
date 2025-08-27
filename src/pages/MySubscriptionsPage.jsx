@@ -2,12 +2,11 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Calendar, Package, Clock, MapPin, CreditCard, Gift, Loader2, AlertCircle, CheckCircle, XCircle, Clock as ClockIcon } from 'lucide-react';
 import { userAPI, subscriptionAPI } from '../utils/api';
-import { isAuthenticated, getUserId } from '../utils/auth';
+import { isAuthenticated, getUserId, getUser } from '../utils/auth';
 import Swal from 'sweetalert2';
 
 const MySubscriptionsPage = () => {
     const navigate = useNavigate();
-    const [dashboardData, setDashboardData] = useState(null);
     const [subscriptions, setSubscriptions] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -42,40 +41,49 @@ const MySubscriptionsPage = () => {
                 setLoading(true);
                 setError(null);
 
+                const userData = getUser();
                 const userId = getUserId();
+                console.log('🔍 MySubscriptions - userId:', userId);
+                console.log('🔍 MySubscriptions - user data:', userData);
+
+                // Kiểm tra nếu là Google user và không có userId
+                if (!userId && userData?.isGoogleUser) {
+                    console.log('🔍 MySubscriptions - Google user without userId, setting empty subscriptions');
+                    setSubscriptions([]);
+                    setDashboardData(null);
+                    setLoading(false);
+                    return;
+                }
+
                 if (!userId) {
+                    console.error('❌ MySubscriptions - No userId found');
                     throw new Error('Không thể lấy thông tin user');
                 }
 
-                // Fetch dashboard data
+                // Fetch user subscriptions
                 try {
-                    const dashboardRes = await userAPI.getDashboard(userId);
-                    setDashboardData(dashboardRes.data.result);
-                } catch (dashboardError) {
-                    console.warn('Không thể tải dashboard data:', dashboardError);
-                    setDashboardData(null);
-                }
+                    // Dùng admin API và filter theo userId
+                    const allSubscriptionsRes = await subscriptionAPI.getAllSubscriptions();
+                    console.log('🔍 API Response:', allSubscriptionsRes);
+                    console.log('🔍 Response data:', allSubscriptionsRes.data);
+                    console.log('🔍 Response structure:', JSON.stringify(allSubscriptionsRes.data, null, 2));
 
-                // Fetch all subscriptions và filter theo userId
-                try {
-                    const subscriptionsRes = await subscriptionAPI.getAllSubscriptions();
-                    console.log('All subscriptions:', subscriptionsRes.data);
+                    // Lấy subscriptions từ response (có thể là data.result hoặc data)
+                    const allSubscriptions = allSubscriptionsRes.data.result || allSubscriptionsRes.data || [];
+                    console.log('🔍 All subscriptions array:', allSubscriptions);
 
                     // Filter subscriptions theo user hiện tại
-                    const userSubscriptions = subscriptionsRes.data.filter(sub => {
-                        console.log('Checking subscription:', sub);
-                        console.log('Subscription user:', sub.user);
-                        console.log('Current userId:', userId);
-                        console.log('Subscription userId:', sub.user?.userId);
-
-                        return sub.user && sub.user.userId === parseInt(userId);
+                    const userSubscriptions = allSubscriptions.filter(sub => {
+                        // Kiểm tra các field có thể chứa userId
+                        const subUserId = sub.user?.userId || sub.userId || sub.user?.id || sub.id;
+                        return subUserId === parseInt(userId);
                     });
-
-                    console.log('Filtered user subscriptions:', userSubscriptions);
                     setSubscriptions(userSubscriptions);
                 } catch (subscriptionError) {
-                    console.error('Error fetching subscriptions:', subscriptionError);
-                    setError('Không thể tải danh sách gói đăng ký. Vui lòng thử lại sau.');
+                    console.error('❌ Error fetching subscriptions:', subscriptionError);
+                    console.error('❌ Error details:', subscriptionError.response?.data);
+                    // Không set error, chỉ set subscriptions là array rỗng
+                    setSubscriptions([]);
                 }
 
             } catch (error) {
@@ -188,47 +196,18 @@ const MySubscriptionsPage = () => {
                 </div>
 
                 {/* Dashboard Summary */}
-                {dashboardData && (
-                    <div className="bg-white rounded-lg shadow-sm p-6 mb-8">
-                        <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center">
-                            <Package className="w-6 h-6 text-primary-600 mr-3" />
-                            Tổng quan gói đăng ký
-                        </h2>
-                        <div className="grid md:grid-cols-4 gap-6">
-                            <div className="text-center">
-                                <div className="text-3xl font-bold text-primary-600 mb-2">
-                                    {subscriptions.length}
-                                </div>
-                                <div className="text-gray-600">Tổng số gói</div>
-                            </div>
-                            {dashboardData.subscriptionPackage && (
-                                <div className="text-center">
-                                    <div className="text-lg font-semibold text-gray-900 mb-2">
-                                        {dashboardData.subscriptionPackage}
-                                    </div>
-                                    <div className="text-gray-600">Gói hiện tại</div>
-                                </div>
-                            )}
-                            {dashboardData.deliveryDate && (
-                                <div className="text-center">
-                                    <div className="text-lg font-semibold text-gray-900 mb-2">
-                                        {formatDate(dashboardData.deliveryDate)}
-                                    </div>
-                                    <div className="text-gray-600">Ngày giao tiếp theo</div>
-                                </div>
-                            )}
-                            {dashboardData.status && (
-                                <div className="text-center">
-                                    <div className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(dashboardData.status)}`}>
-                                        {getStatusIcon(dashboardData.status)}
-                                        <span className="ml-2">{getStatusText(dashboardData.status)}</span>
-                                    </div>
-                                    <div className="text-gray-600 mt-2">Trạng thái</div>
-                                </div>
-                            )}
+                <div className="bg-white rounded-lg shadow-sm p-6 mb-8">
+                    <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center">
+                        <Package className="w-6 h-6 text-primary-600 mr-3" />
+                        Tổng quan gói đăng ký
+                    </h2>
+                    <div className="text-center">
+                        <div className="text-3xl font-bold text-primary-600 mb-2">
+                            {subscriptions.length}
                         </div>
+                        <div className="text-gray-600">Tổng số gói đăng ký</div>
                     </div>
-                )}
+                </div>
 
                 {/* Subscriptions List */}
                 <div className="bg-white rounded-lg shadow-sm">
@@ -355,86 +334,21 @@ const MySubscriptionsPage = () => {
                         <div className="p-12 text-center">
                             <Package className="w-16 h-16 text-gray-400 mx-auto mb-4" />
                             <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                                Chưa có gói đăng ký nào
+                                Bạn chưa đăng ký gói dịch vụ nào
                             </h3>
                             <p className="text-gray-600 mb-6">
-                                Bạn chưa đăng ký gói hoa nào. Hãy khám phá các gói hoa của chúng tôi!
+                                Hiện tại bạn chưa có gói đăng ký nào. Hãy khám phá và đăng ký các gói hoa tuyệt đẹp của chúng tôi!
                             </p>
-                            <button
-                                onClick={() => navigate('/packages')}
-                                className="btn-primary"
-                            >
-                                Xem các gói hoa
-                            </button>
-                        </div>
-                    )}
-                </div>
-
-                {/* Action Buttons */}
-                <div className="mt-8 bg-white rounded-lg shadow-sm p-6">
-                    <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center">
-                        <Calendar className="w-6 h-6 text-primary-600 mr-3" />
-                        Quản lý gói đăng ký
-                    </h2>
-
-                    <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {/* Đăng ký gói mới */}
-                        <div className="bg-gradient-to-r from-primary-50 to-secondary-50 p-6 rounded-lg border border-primary-200">
-                            <div className="text-center">
-                                <Package className="w-12 h-12 text-primary-600 mx-auto mb-4" />
-                                <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                                    Đăng ký gói mới
-                                </h3>
-                                <p className="text-gray-600 mb-4">
-                                    Khám phá và đăng ký các gói hoa mới
-                                </p>
+                            <div className="flex flex-col sm:flex-row gap-4 justify-center">
                                 <button
                                     onClick={() => navigate('/packages')}
-                                    className="btn-primary w-full"
+                                    className="btn-primary"
                                 >
                                     Xem các gói hoa
                                 </button>
                             </div>
                         </div>
-
-                        {/* Theo dõi giao hàng */}
-                        <div className="bg-gradient-to-r from-green-50 to-blue-50 p-6 rounded-lg border border-green-200">
-                            <div className="text-center">
-                                <MapPin className="w-12 h-12 text-green-600 mx-auto mb-4" />
-                                <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                                    Theo dõi giao hàng
-                                </h3>
-                                <p className="text-gray-600 mb-4">
-                                    Kiểm tra lịch giao hàng và trạng thái
-                                </p>
-                                <button
-                                    onClick={() => navigate('/subscription')}
-                                    className="btn-secondary w-full"
-                                >
-                                    Xem chi tiết
-                                </button>
-                            </div>
-                        </div>
-
-                        {/* Liên hệ hỗ trợ */}
-                        <div className="bg-gradient-to-r from-yellow-50 to-orange-50 p-6 rounded-lg border border-yellow-200">
-                            <div className="text-center">
-                                <CreditCard className="w-12 h-12 text-yellow-600 mx-auto mb-4" />
-                                <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                                    Hỗ trợ khách hàng
-                                </h3>
-                                <p className="text-gray-600 mb-4">
-                                    Liên hệ để được hỗ trợ và tư vấn
-                                </p>
-                                <button
-                                    onClick={() => navigate('/contact')}
-                                    className="btn-secondary w-full"
-                                >
-                                    Liên hệ ngay
-                                </button>
-                            </div>
-                        </div>
-                    </div>
+                    )}
                 </div>
             </div>
         </div>

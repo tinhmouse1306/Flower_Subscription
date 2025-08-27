@@ -15,12 +15,20 @@ api.interceptors.request.use(
     (config) => {
         // Bỏ qua gắn token nếu request đánh dấu skipAuth
         if (config && config.skipAuth) {
+            console.log('🔍 Request with skipAuth:', config.url);
             return config;
         }
 
         const token = getToken();
+        console.log('🔍 Request to:', config.url);
+        console.log('🔍 Token exists:', !!token);
+        console.log('🔍 Token preview:', token ? token.substring(0, 50) + '...' : 'null');
+
         if (token) {
             config.headers.Authorization = `Bearer ${token}`;
+            console.log('🔍 Authorization header set');
+        } else {
+            console.log('🔍 No token found');
         }
         return config;
     },
@@ -32,12 +40,23 @@ api.interceptors.request.use(
 // Response interceptor - xử lý lỗi
 api.interceptors.response.use(
     (response) => {
+        console.log('✅ Response success:', response.config?.url, response.status);
         return response;
     },
     (error) => {
+        console.error('❌ Response error:', error.config?.url, error.response?.status, error.response?.data);
+
         // Xử lý lỗi 401 - Unauthorized (trừ khi request đánh dấu skipAuth)
         if (error.response?.status === 401 && !error.config?.skipAuth) {
-            logout();
+            // Check if user is Google user - don't logout for Google users
+            const userData = JSON.parse(localStorage.getItem('userData') || '{}');
+            if (!userData.isGoogleUser) {
+                console.log('🔍 Regular user 401 error, logging out');
+                logout();
+            } else {
+                // Log error for Google users but don't logout
+                console.warn('Google user API error (401):', error.config?.url);
+            }
         }
 
         // Xử lý lỗi network
@@ -75,6 +94,14 @@ export const userAPI = {
     // Change password
     changePassword: (data) => api.post('/api/user/change-password', data),
 
+    // Check old password
+    checkPassword: (data) => api.post('/auth/user/checkPass', data),
+
+    // Reset password with OTP
+    resetPassword: (email, otp, newPassword) => api.post('/auth/reset-password', null, {
+        params: { email, otp, newPassword }
+    }),
+
     // Get user dashboard info
     getDashboard: (userId) => api.get(`/api/dashBoard/${userId}`),
 
@@ -83,23 +110,42 @@ export const userAPI = {
 };
 
 export const subscriptionAPI = {
-    // Get packages
-    getPackages: () => api.get('/api/packages'),
+    // Get packages (public API - no auth required)
+    getPackages: () => api.get('/api/packages', { skipAuth: true }),
 
-    // Get package detail
-    getPackageDetail: (id) => api.get(`/api/packages/${id}`),
+    // Get package detail (public API - no auth required)
+    getPackageDetail: (id) => api.get(`/api/packages/${id}`, { skipAuth: true }),
 
-    // Get flowers
-    getFlowers: () => api.get('/api/flowers'),
+    // Get flowers (public API - no auth required)
+    getFlowers: () => api.get('/api/flowers', { skipAuth: true }),
+
+    // Get bouquets (public for Google users, authenticated for regular users)
+    getBouquets: () => {
+        const userData = JSON.parse(localStorage.getItem('userData') || '{}');
+        const isGoogleUser = userData.isGoogleUser || false;
+
+        if (isGoogleUser) {
+            // Google users: use public flowers endpoint as temporary workaround
+            console.log('🔍 Google user detected, using public flowers endpoint');
+            return api.get('/api/flowers', { skipAuth: true });
+        } else {
+            // Regular users: use JWT token for bouquets
+            console.log('🔍 Regular user detected, using authenticated bouquets endpoint');
+            return api.get('/api/admin/bouquets');
+        }
+    },
 
     // Create subscription
     createSubscription: (data) => api.post('/api/subscriptions', data),
 
-    // Get all subscriptions (admin)
+    // Get all subscriptions (admin only)
     getAllSubscriptions: () => api.get('/api/subscriptions'),
 
     // Get subscription by ID
     getSubscriptionById: (id) => api.get(`/api/subscriptions/${id}`),
+
+    // Get subscription detail (alias for getSubscriptionById)
+    getSubscriptionDetail: (id) => api.get(`/api/subscriptions/${id}`),
 
     // Update subscription status
     updateSubscriptionStatus: (id, status) => api.put(`/api/subscriptions/${id}/status?status=${status}`),
@@ -131,7 +177,7 @@ export const adminAPI = {
     deleteFlower: (flowerId) => api.delete(`/api/admin/flowers/${flowerId}`),
     updateFlowerStock: (flowerId, stock) => api.patch(`/api/admin/flowers/${flowerId}/stock`, { stock }),
 
-    // Bouquet management
+    // Bouquet management (admin only)
     getBouquets: () => api.get('/api/admin/bouquets'),
     getBouquetDetail: (id) => api.get(`/api/admin/bouquets/${id}`),
     createBouquet: (data) => api.post('/api/admin/bouquets', data),

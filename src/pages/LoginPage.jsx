@@ -116,14 +116,16 @@ const LoginPage = () => {
                     authenticated: true,
                     role: decodedToken.payload.scope,
                     userId: decodedToken.payload.sub,
-                    // Thử lấy fullName từ nhiều nguồn khác nhau
-                    fullName: data.result.fullName ||
+                    // Lấy fullName từ data.result.result.fullName (nested structure)
+                    fullName: data.result.result?.fullName ||
+                        data.result.fullName ||
                         data.result.email ||
                         decodedToken.payload.fullName ||
                         decodedToken.payload.name ||
                         decodedToken.payload.email ||
                         formData.userName,
-                    email: data.result.email ||
+                    email: data.result.result?.email ||
+                        data.result.email ||
                         decodedToken.payload.email,
                     issuedAt: decodedToken.payload.iat,
                     expiresAt: decodedToken.payload.exp
@@ -201,92 +203,65 @@ const LoginPage = () => {
     const handleGoogleLogin = async () => {
         try {
             setIsLoading(true);
-
-            console.log('🔍 Starting Google login with popup...');
-            console.log('🔍 Current domain:', window.location.hostname);
-            console.log('🔍 Current URL:', window.location.href);
-
-            // Test Firebase Auth first
-            await testFirebaseAuth();
-
-            console.log('🔍 Auth object:', auth);
-            console.log('🔍 Provider object:', googleProvider);
-
-            // Use Firebase Auth from unified config
-            const provider = googleProvider;
-
-            if (!provider) {
-                throw new Error('Firebase Auth not available');
-            }
-
-            // Configure Google provider
-            provider.addScope('email');
-            provider.addScope('profile');
-
-            console.log('🔍 About to call signInWithPopup...');
-            console.log('🔍 Auth object before call:', auth);
-            console.log('🔍 Provider object before call:', provider);
+            console.log('🚀 Starting Google login...');
 
             // Popup-based Google Sign-In
-            const result = await signInWithPopup(auth, provider);
-            console.log('🔍 Popup result:', result);
-            console.log('🔍 User from popup:', result.user);
+            const result = await signInWithPopup(auth, googleProvider);
+            console.log('✅ Google login successful:', result.user);
 
             if (result.user) {
-                console.log('🔍 Google login successful:', result.user);
+                const user = result.user;
+                const email = user.email;
+                const name = user.displayName || email;
+                const uid = user.uid;
+                const idToken = await user.getIdToken();
 
-                const idToken = await result.user.getIdToken();
-                console.log('🔍 Got ID token:', idToken);
+                console.log('📝 User info:', { email, name, uid });
+                console.log('🔑 ID Token received');
 
-                console.log('🔍 Calling BE API with token...');
-                console.log('🔍 Token being sent:', idToken.substring(0, 50) + '...');
-                const response = await authAPI.googleLogin({ idToken });
-                console.log('🔍 BE API response:', response);
-                console.log('🔍 Response status:', response.status);
-                console.log('🔍 Response headers:', response.headers);
-                const data = response.data;
-                console.log('🔍 BE API data:', data);
-                console.log('🔍 Data code:', data.code);
-                console.log('🔍 Data message:', data.message);
+                // Show success message
+                await Swal.fire({
+                    icon: 'success',
+                    title: 'Đăng nhập Google thành công!',
+                    text: `Chào mừng ${name}!`,
+                    showConfirmButton: false,
+                    timer: 2000,
+                    timerProgressBar: true,
+                    background: '#f8fafc',
+                    color: '#1f2937',
+                    customClass: {
+                        popup: 'rounded-lg shadow-xl',
+                        title: 'text-xl font-bold text-gray-900',
+                        content: 'text-gray-600'
+                    }
+                });
 
-                if (data.code === 1010) {
-                    await Swal.fire({
-                        icon: 'success',
-                        title: 'Đăng nhập Google thành công!',
-                        text: `Chào mừng ${data.result.name}!`,
-                        showConfirmButton: false,
-                        timer: 2000,
-                        timerProgressBar: true,
-                        background: '#f8fafc',
-                        color: '#1f2937',
-                        customClass: {
-                            popup: 'rounded-lg shadow-xl',
-                            title: 'text-xl font-bold text-gray-900',
-                            content: 'text-gray-600'
-                        }
-                    });
+                // Save to localStorage
+                const userData = {
+                    email: email,
+                    name: name,
+                    uid: uid,
+                    authenticated: true,
+                    isGoogleUser: true,
+                    token: idToken,
+                    role: 'USER' // Add default role for Google users
+                };
 
-                    setAuthData(data.result.token, {
-                        email: data.result.email,
-                        name: data.result.name,
-                        uid: data.result.uid,
-                        authenticated: true
-                    });
+                console.log('💾 Saving user data:', userData);
+                setAuthData(idToken, userData);
 
-                    window.location.href = '/';
-                } else {
-                    throw new Error(data.message || 'Server authentication failed');
-                }
+                console.log('✅ User data saved successfully');
+                console.log('🔄 Redirecting to homepage...');
+
+                // Redirect to homepage
+                window.location.href = '/';
             }
 
         } catch (error) {
-            console.error('🔍 Google popup error:', error);
-            console.error('🔍 Error response:', error.response);
-            console.error('🔍 Error status:', error.response?.status);
-            console.error('🔍 Error data:', error.response?.data);
+            console.error('❌ Google login error:', error);
 
             if (error.code === 'auth/popup-closed-by-user') {
-                console.log('🔍 User closed popup');
+                console.log('👤 User closed popup');
                 return;
             }
 

@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
-import { Menu, X, User, ShoppingCart, Heart, LogOut, Settings, Shield, ChevronDown, Package, UserCircle } from 'lucide-react';
+import { Menu, X, User, LogOut, Settings, Shield, ChevronDown, Package, UserCircle } from 'lucide-react';
 import { isAuthenticated, getUser, logout } from '../utils/auth';
 
 const Header = () => {
@@ -15,7 +15,9 @@ const Header = () => {
             const authenticated = isAuthenticated();
             setIsLoggedIn(authenticated);
             if (authenticated) {
-                setUser(getUser());
+                const rawUser = getUser();
+                // BE đã lưu đúng, không cần swap nữa
+                setUser(rawUser);
             }
         };
 
@@ -71,27 +73,20 @@ const Header = () => {
                         <Link to="/packages" className="text-gray-700 hover:text-primary-600 font-medium transition-colors">
                             Gói hoa
                         </Link>
-
-
-                        <Link to="/about" className="text-gray-700 hover:text-primary-600 font-medium transition-colors">
-                            Về chúng tôi
-                        </Link>
-                        <Link to="/contact" className="text-gray-700 hover:text-primary-600 font-medium transition-colors">
-                            Liên hệ
-                        </Link>
+                        {isLoggedIn && (
+                            <>
+                                <Link to="/profile" className="text-gray-700 hover:text-primary-600 font-medium transition-colors">
+                                    Hồ sơ cá nhân
+                                </Link>
+                                <Link to="/my-subscriptions" className="text-gray-700 hover:text-primary-600 font-medium transition-colors">
+                                    Gói đăng ký
+                                </Link>
+                            </>
+                        )}
                     </nav>
 
                     {/* Desktop Actions */}
                     <div className="hidden md:flex items-center space-x-4">
-                        <button className="p-2 text-gray-600 hover:text-primary-600 transition-colors">
-                            <Heart size={20} />
-                        </button>
-                        <Link to="/cart" className="p-2 text-gray-600 hover:text-primary-600 transition-colors relative">
-                            <ShoppingCart size={20} />
-                            <span className="absolute -top-1 -right-1 bg-primary-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
-                                2
-                            </span>
-                        </Link>
 
                         {isLoggedIn ? (
                             <div className="relative" ref={userMenuRef}>
@@ -100,7 +95,7 @@ const Header = () => {
                                     className="flex items-center space-x-2 text-gray-700 hover:text-primary-600 transition-colors"
                                 >
                                     <span className="font-medium">
-                                        Welcome, {user?.fullName || user?.userName || 'User'}
+                                        Welcome, {user?.name || user?.email || user?.fullName || user?.userName || 'User'}
                                     </span>
                                     <ChevronDown size={16} className={`transition-transform ${isUserMenuOpen ? 'rotate-180' : ''}`} />
                                 </button>
@@ -191,29 +186,31 @@ const Header = () => {
                             >
                                 Gói hoa
                             </Link>
-
-
-                            <Link
-                                to="/about"
-                                className="text-gray-700 hover:text-primary-600 font-medium transition-colors"
-                                onClick={() => setIsMenuOpen(false)}
-                            >
-                                Về chúng tôi
-                            </Link>
-                            <Link
-                                to="/contact"
-                                className="text-gray-700 hover:text-primary-600 font-medium transition-colors"
-                                onClick={() => setIsMenuOpen(false)}
-                            >
-                                Liên hệ
-                            </Link>
+                            {isLoggedIn && (
+                                <>
+                                    <Link
+                                        to="/profile"
+                                        className="text-gray-700 hover:text-primary-600 font-medium transition-colors"
+                                        onClick={() => setIsMenuOpen(false)}
+                                    >
+                                        Hồ sơ cá nhân
+                                    </Link>
+                                    <Link
+                                        to="/my-subscriptions"
+                                        className="text-gray-700 hover:text-primary-600 font-medium transition-colors"
+                                        onClick={() => setIsMenuOpen(false)}
+                                    >
+                                        Gói đăng ký
+                                    </Link>
+                                </>
+                            )}
 
                             <div className="pt-4 border-t border-gray-200">
                                 {isLoggedIn ? (
                                     <div className="flex flex-col space-y-2">
                                         <div className="flex items-center space-x-2">
                                             <span className="text-gray-700 font-medium">
-                                                Welcome, {user?.fullName || user?.userName || 'User'}
+                                                Welcome, {user?.name || user?.fullName || user?.userName || 'User'}
                                             </span>
                                         </div>
 
@@ -227,12 +224,12 @@ const Header = () => {
                                         </Link>
 
                                         <Link
-                                            to="/orders"
+                                            to="/my-subscriptions"
                                             className="flex items-center space-x-2 text-gray-700 hover:text-primary-600 font-medium transition-colors"
                                             onClick={() => setIsMenuOpen(false)}
                                         >
                                             <Package size={16} />
-                                            <span>Đơn hàng</span>
+                                            <span>Gói đăng ký</span>
                                         </Link>
 
                                         <button

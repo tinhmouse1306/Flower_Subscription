@@ -24,7 +24,6 @@ const SubscriptionPage = () => {
     // Dữ liệu payment methods theo API BE
     const paymentMethods = [
         { id: 1, name: 'VNPAY', code: 'CREDIT_CARD', description: 'Thanh toán qua VNPAY', icon: '💳' },
-        { id: 2, name: 'MOMO', code: 'MOMO', description: 'Thanh toán qua MOMO', icon: '📱' },
         { id: 3, name: 'Tiền mặt', code: 'COD', description: 'Thanh toán khi nhận hàng', icon: '💰' }
     ];
 
@@ -75,17 +74,41 @@ const SubscriptionPage = () => {
                         name: p.name,
                         description: p.description,
                         price: p.price,
-                        duration: p.duration,
+                        duration: p.durationMonths || p.duration,
+                        deliveriesPerMonth: p.deliveriesPerMonth,
                         deliveryFrequency: p.deliveryFrequency,
                         imageUrl: p.imageUrl
                     };
                     setSelectedPlan(plan);
                 }
 
-                // Fetch bouquets from API (sử dụng admin API vì user vẫn có thể dùng)
+                // Fetch bouquets from API (sử dụng public API cho user)
                 try {
-                    const bouquetsRes = await adminAPI.getBouquets();
-                    setBouquets(bouquetsRes.data || []);
+                    const bouquetsRes = await subscriptionAPI.getBouquets();
+                    console.log('🔍 Bouquets response:', bouquetsRes.data);
+
+                    // Handle both bouquets and flowers data
+                    if (bouquetsRes.data && bouquetsRes.data.length > 0) {
+                        // Check if it's flowers data (has type, color) or bouquets data (has name, description)
+                        const isFlowersData = bouquetsRes.data[0].hasOwnProperty('type');
+
+                        if (isFlowersData) {
+                            // Convert flowers to bouquet-like format for Google users
+                            const convertedBouquets = bouquetsRes.data.map(flower => ({
+                                id: flower.id,
+                                name: `${flower.type} ${flower.color}`,
+                                description: flower.description || `Beautiful ${flower.color} ${flower.type}`,
+                                imageUrl: flower.imageUrl || 'https://via.placeholder.com/300x200?text=Flower'
+                            }));
+                            setBouquets(convertedBouquets);
+                            console.log('🔍 Converted flowers to bouquets:', convertedBouquets);
+                        } else {
+                            // Regular bouquets data
+                            setBouquets(bouquetsRes.data);
+                        }
+                    } else {
+                        setBouquets([]);
+                    }
                 } catch (bouquetError) {
                     console.warn('Không thể tải danh sách bouquets:', bouquetError);
                     setBouquets([]);
@@ -301,10 +324,11 @@ const SubscriptionPage = () => {
                                                 {selectedPlan.description}
                                             </p>
                                             <div className="flex items-center text-sm text-gray-500">
-                                                <Clock className="w-4 h-4 mr-1" />
+                                                <Calendar className="w-4 h-4 mr-1" />
+                                                <span className="mx-2">•</span>
                                                 <span>{selectedPlan.duration} tháng</span>
                                                 <span className="mx-2">•</span>
-                                                <span>{selectedPlan.deliveryFrequency} lần/tuần</span>
+                                                <span>{selectedPlan.deliveriesPerMonth || selectedPlan.deliveryFrequency} lần/tháng</span>
                                             </div>
                                         </div>
                                         <div className="text-right">
@@ -439,7 +463,7 @@ const SubscriptionPage = () => {
                             {selectedPlan && (
                                 <div className="mb-6">
                                     <h3 className="font-semibold text-gray-900 mb-2">
-                                        Gói đã chọn:
+                                        Gói đã chọn: ID: {selectedPlan.id}
                                     </h3>
                                     <div className="bg-gray-50 p-4 rounded-lg">
                                         <div className="flex items-center">
@@ -453,7 +477,7 @@ const SubscriptionPage = () => {
                                             <div className="flex-1">
                                                 <span className="font-medium">{selectedPlan.name}</span>
                                                 <div className="text-sm text-gray-600">
-                                                    {selectedPlan.duration} tháng
+                                                    • {selectedPlan.duration} tháng • {selectedPlan.deliveriesPerMonth || selectedPlan.deliveryFrequency} lần/tháng
                                                 </div>
                                             </div>
                                         </div>

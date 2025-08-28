@@ -8,8 +8,8 @@ import { Search, Filter, Eye, Phone, Calendar } from 'lucide-react';
 const mapStatus = (s) => {
   const v = String(s || '').toLowerCase();
   if (v === 'available') return 'pending';     // hiển thị là 'Chờ xác nhận'
-  if (v === 'pending')   return 'confirmed';   // tuỳ bạn muốn hiển thị thế nào
-  if (v === 'active')    return 'shipping';    // đang giao / đang thực hiện
+  if (v === 'pending') return 'confirmed';   // tuỳ bạn muốn hiển thị thế nào
+  if (v === 'active') return 'shipping';    // đang giao / đang thực hiện
   if (v === 'completed') return 'delivered';
   if (v === 'cancelled') return 'cancelled';
   return 'pending';
@@ -20,7 +20,7 @@ const toDate10 = (x) => {
   try {
     const d = new Date(x);
     if (!isNaN(d)) return d.toISOString().slice(0, 10);
-  } catch {}
+  } catch { }
   const s = String(x);
   return /^\d{4}-\d{2}-\d{2}/.test(s) ? s.slice(0, 10) : s;
 };
@@ -129,10 +129,8 @@ const StaffOrders = () => {
   const getStatusText = (status) => {
     switch (status) {
       case 'pending': return 'Chờ xác nhận';
-      case 'confirmed': return 'Đã xác nhận';
-      case 'processing': return 'Đang xử lý';
-      case 'shipping': return 'Đang giao';
-      case 'delivered': return 'Đã giao';
+      case 'shipping': return 'Đã kích hoạt';
+      case 'delivered': return 'Đã giao hàng';
       case 'cancelled': return 'Đã hủy';
       default: return status;
     }
@@ -200,10 +198,7 @@ const StaffOrders = () => {
                   <p className="text-sm font-medium text-gray-700">Khách hàng</p>
                   <p className="text-sm text-gray-900">{order.customer}</p>
                 </div>
-                <div>
-                  <p className="text-sm font-medium text-gray-700">Số điện thoại</p>
-                  <p className="text-sm text-gray-900">{order.phone}</p>
-                </div>
+
                 <div>
                   <p className="text-sm font-medium text-gray-700">Gói dịch vụ</p>
                   <p className="text-sm text-gray-900">{order.package}</p>
@@ -212,11 +207,6 @@ const StaffOrders = () => {
                   <p className="text-sm font-medium text-gray-700">Số tiền</p>
                   <p className="text-sm text-gray-900">{Number(order.amount || 0).toLocaleString()}đ</p>
                 </div>
-              </div>
-
-              <div className="mb-4">
-                <p className="text-sm font-medium text-gray-700 mb-1">Địa chỉ giao hàng</p>
-                <p className="text-sm text-gray-900">{order.address}</p>
               </div>
 
               {order.notes && (
@@ -232,10 +222,6 @@ const StaffOrders = () => {
                     <Calendar size={16} className="text-gray-400" />
                     <span className="text-sm text-gray-600">Ngày giao: {order.deliveryDate}</span>
                   </div>
-                  <button className="flex items-center space-x-2 text-blue-600 hover:text-blue-700">
-                    <Phone size={16} />
-                    <span className="text-sm">Gọi</span>
-                  </button>
                 </div>
 
                 <div className="flex space-x-2">
@@ -246,10 +232,8 @@ const StaffOrders = () => {
                     className="text-sm border-gray-300 rounded-md"
                   >
                     <option value="pending">Chờ xác nhận</option>
-                    <option value="confirmed">Đã xác nhận</option>
-                    <option value="processing">Đang xử lý</option>
-                    <option value="shipping">Đang giao</option>
-                    <option value="delivered">Đã giao</option>
+                    <option value="shipping">Đã kích hoạt</option>
+                    <option value="delivered">Đã giao hàng</option>
                     <option value="cancelled">Đã hủy</option>
                   </select>
                   <button

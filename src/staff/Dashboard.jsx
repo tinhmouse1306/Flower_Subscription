@@ -52,14 +52,14 @@ const uiStatus = (apiStatus) => {
 // Chuẩn hoá stats -> cấu trúc UI đang dùng
 const normalizeStats = (s) => ([
   {
-    title: 'Đơn hàng hôm nay',
-    value: String(s.todayOrders ?? 0),
+    title: 'Cần xử lý',
+    value: String(s.pending ?? 0),
     icon: ShoppingCart,
     color: 'text-blue-600',
     bg: 'bg-blue-100'
   },
   {
-    title: 'Đơn hàng đang giao',
+    title: 'Đã kích hoạt',
     value: String(s.shipping ?? 0),
     icon: Truck,
     color: 'text-orange-600',
@@ -71,14 +71,7 @@ const normalizeStats = (s) => ([
     icon: CheckCircle,
     color: 'text-green-600',
     bg: 'bg-green-100'
-  },
-  {
-    title: 'Khách hàng cần hỗ trợ',
-    value: String(s.needSupport ?? 0),
-    icon: AlertCircle,
-    color: 'text-red-600',
-    bg: 'bg-red-100'
-  },
+  }
 ]);
 
 // Chuẩn hoá 1 bản ghi subscription về item hiển thị ở “Đơn hôm nay”
@@ -102,9 +95,8 @@ const getStatusColor = (status) => {
 const getStatusText = (status) => {
   switch (status) {
     case 'pending': return 'Chờ xác nhận';
-    case 'processing': return 'Đang xử lý';
-    case 'shipping': return 'Đang giao';
-    case 'delivered': return 'Đã giao';
+    case 'shipping': return 'Đã kích hoạt';
+    case 'delivered': return 'Đã giao hàng';
     default: return status;
   }
 };

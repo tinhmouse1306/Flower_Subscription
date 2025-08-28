@@ -13,9 +13,9 @@ const api = axios.create({
 });
 
 api.interceptors.request.use((config) => {
-  const token = getToken();
-  if (token) config.headers.Authorization = `Bearer ${token}`;
-  return config;
+    const token = getToken();
+    if (token) config.headers.Authorization = `Bearer ${token}`;
+    return config;
 });
 
 // Request interceptor - tự động thêm token
@@ -94,10 +94,10 @@ export const authAPI = {
 
 export const userAPI = {
     // Get user profile
-    getProfile: () => api.get('/api/user/profile'),
+    getProfile: () => api.get('/api/myInfo'),
 
     // Update profile
-    updateProfile: (data) => api.put('/api/user/profile', data),
+    updateProfile: (data) => api.put('/api/updateUser/profile', data),
 
     // Change password
     changePassword: (data) => api.post('/api/user/change-password', data),
@@ -176,12 +176,12 @@ export const subscriptionAPI = {
 
     // Get user subscriptions
     getUserSubscriptions: () => api.get('/api/subscriptions/user'),
-     // LIST
-  list: (params = {}) => api.get('/api/subscriptions', { params }),
-  // DETAIL
-  getById: (id) => api.get(`/api/subscriptions/${id}`),
-  // UPDATE STATUS qua query string
-  updateStatus: (id, status) => api.put(`/api/subscriptions/${id}/status`, null, { params: { status } }),
+    // LIST
+    list: (params = {}) => api.get('/api/subscriptions', { params }),
+    // DETAIL
+    getById: (id) => api.get(`/api/subscriptions/${id}`),
+    // UPDATE STATUS qua query string
+    updateStatus: (id, status) => api.put(`/api/subscriptions/${id}/status`, null, { params: { status } }),
 
 };
 
